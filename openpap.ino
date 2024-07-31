@@ -4,7 +4,6 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <RotaryEncoder.h>
 
 // Define the pins for KY-040 rotary encoder
 #define CLK_PIN 5
@@ -36,10 +35,6 @@ HX711 scale;
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-RotaryEncoder encoder(CLK_PIN, DT_PIN);
-
-double Setpoint, Input, Output;
-PID myPID(&Input, &Output, &Setpoint, 4, 20, 0, DIRECT);
 
 enum State {
   STATE_INIT,
@@ -114,26 +109,68 @@ void setup_scale() {
   scale.tare(); 
 }
 
-int rotation = 0;
-void IRAM_ATTR handle_encoder() {
-  encoder.tick();
-  rotation = digitalRead(DT_PIN) ? -1 : 1;
-}
-
 bool button_pressed = false;
 void IRAM_ATTR handle_button() {
   button_pressed = true;
 }
 
 
-void setup_knob() {
+void setup_button() {
   pinMode(SW_PIN, INPUT_PULLDOWN);
-  attachInterrupt(CLK_PIN, handle_encoder, HIGH);
   attachInterrupt(SW_PIN, handle_button, HIGH);
 }
 
+void cpap(void *params) {
+//  TickType_t xLastWakeTime = xTaskGetTickCount();
+//  const TickType_t xFrequency = 40 / portTICK_PERIOD_MS;
+  double Setpoint, Input, Output;
+  Setpoint = 70;
+  PID myPID(&Input, &Output, &Setpoint, 3, 3, 0, DIRECT);
+  myPID.SetMode(AUTOMATIC);
+  //myPID.SetSampleTime(50);
+  if (USE_ESC) myPID.SetOutputLimits(0,ESC_MAX-ESC_MIN);
+  if (USE_PWM) myPID.SetOutputLimits(0,512);
+
+  while (!button_pressed) {
+    Input = scale.get_value(1) / CALIBRATION;
+    if (myPID.Compute()) {
+      if (USE_PWM) ledcWrite(PWM_PIN, (int)Output);
+      if (USE_ESC) ESC.writeMicroseconds(ESC_MIN+(int)Output);
+      double fan_pct = Output*100/(USE_ESC ? ESC_MAX-ESC_MIN : 512);
+      Serial.print("pressure:");
+      Serial.print(Input);
+      Serial.print(",fan:");
+      Serial.print(fan_pct);
+//      Serial.print(",now:");
+//      Serial.print(millis());
+      Serial.println();
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      display.println("Open CPAP / BiPAP\n");
+      display.println("Pressure (cm H2O)");
+      display.print("");
+      display.print(Setpoint/10);
+      display.print(" => ");
+      display.println(Input/10);
+      display.println();
+      display.println("Fan (% => RPM)");
+      display.print("");
+      display.print(fan_pct);
+      display.print(" => ");
+      display.println(tach_ma/tach_ma_weight*60);
+      display.display();
+      //*/
+    }
+//    vTaskDelayUntil(&xLastWakeTime, xFrequency);
+  }
+  button_pressed = false;
+  wind_down(Output);
+  ESP.restart();
+}
+
+
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(460800);
 
   setup_display();
 
@@ -142,12 +179,7 @@ void setup() {
 
   setup_scale();
 
-  setup_knob();
-
-  if (USE_ESC) myPID.SetOutputLimits(0,ESC_MAX-ESC_MIN);
-  if (USE_PWM) myPID.SetOutputLimits(0,512);
-  Setpoint = 90;
-  myPID.SetMode(AUTOMATIC);
+  setup_button();
 
   display.println("Ready!");
   display.display();
@@ -176,49 +208,7 @@ void loop() {
   tach_ma = tach*tach_ma_weight + tach_ma*(1-tach_ma_weight);
   tach = 0;
   if (state==STATE_RUNNING) {
-    Input = scale.get_value(1) / CALIBRATION;
-    myPID.Compute();
-    if (USE_PWM) ledcWrite(PWM_PIN, (int)Output);
-    if (USE_ESC) ESC.writeMicroseconds(ESC_MIN+(int)Output);
-    double fan_pct = Output*100/(USE_ESC ? ESC_MAX-ESC_MIN : 512);
-    Serial.print("pressure:");
-    Serial.print(Input);
-    Serial.print(",fan:");
-    Serial.print(fan_pct);
-    Serial.println();
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println("Open CPAP / BiPAP\n");
-    display.println("Pressure (cm H2O)");
-    display.print("");
-    display.print(Setpoint/10);
-    display.print(" => ");
-    display.println(Input/10);
-    display.println();
-    display.println("Fan (% => RPM)");
-    display.print("");
-    display.print(fan_pct);
-    display.print(" => ");
-    display.println(tach_ma/tach_ma_weight*60);
-    display.display();
-    if (fan_pct>=110.0) {
-      state = STATE_ERROR;
-      wind_down(Output);
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.println("Open CPAP / BiPAP\n");
-      display.println("Error!\n");
-      display.println("Fan PID hit 100%.");
-      display.println("Disconnected?");
-      display.display();
-    }
-    if (button_pressed) {
-      button_pressed = false;
-      wind_down(Output);
-      ESP.restart();
-    }
-    int execution_time = millis() - start;
-    if (execution_time < 50) delay(50 - execution_time);
+    delay(1000);
   } else
 
   if (state==STATE_READY) {
@@ -226,6 +216,7 @@ void loop() {
       button_pressed = false;
       state = STATE_RUNNING;
       Serial.println("Starting...");
+    xTaskCreatePinnedToCore(cpap, "cpap", 4096, (void *)1, 1, NULL, 1);
     }
     delay(500);
   } else
