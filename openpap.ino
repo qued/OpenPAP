@@ -4,6 +4,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <qrcode.h>
+
 
 
 
@@ -29,6 +31,11 @@
 
 #define USE_PWM false
 #define USE_ESC true
+
+#define NAME "OpenPAP"
+#define TITLE " --==[ OpenPAP ]==--"
+#define COPY "(C) Derek Anderson"
+#define LINK " https://openpap.org"
 
 Servo ESC;  
 HX711 scale;
@@ -94,7 +101,7 @@ class PID {
 
 };
 
-
+double pressure = 70; // mmH2O
 
 void esc_setup() {
   display.println("Init ESC...");
@@ -143,8 +150,9 @@ void setup_display() {
 
   // Display initial text
   display.setCursor(0, 0);
-  display.println("Open CPAP / BiPAP");
-  display.println("(C) Derek Anderson\n");
+  display.println(TITLE);
+  display.println(LINK);
+  display.println();
   display.display(); // Display text
   delay(1000);
 }
@@ -174,9 +182,8 @@ void cpap(void *params) {
   Serial.println("Starting...");
   TickType_t last_wake_time = xTaskGetTickCount();
   const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
-  double set_point, input, output;
-  set_point = 70;
-  PID pid(&input, &output, &set_point, 4, 3, 0, USE_ESC ? ESC_MIN : 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
+  double input, output;
+  PID pid(&input, &output, &pressure, 4, 3, 0, USE_ESC ? ESC_MIN : 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
 
   while (!button_pressed) {
     int now = millis();
@@ -194,18 +201,16 @@ void cpap(void *params) {
     Serial.println();
     display.clearDisplay();
     display.setCursor(0, 0);
-    display.println("Open CPAP / BiPAP\n");
+    display.println(TITLE);
     display.println("Pressure (cm H2O)");
     display.print("");
-    display.print(set_point/10);
+    display.print(pressure/10);
     display.print(" => ");
     display.println(input/10);
     display.println();
-    display.println("Fan (% => RPM)");
+    display.println("Fan (%)");
     display.print("");
     display.print(fan_pct);
-    display.print(" => ");
-    display.println(tach_ma/tach_ma_weight*60);
     display.display();
     vTaskDelayUntil(&last_wake_time, delay_ms);
   }
@@ -214,9 +219,25 @@ void cpap(void *params) {
   ESP.restart();
 }
 
+void drawQRCode(esp_qrcode_handle_t qrcode) {
+    int qr_size = esp_qrcode_get_size(qrcode);
+    int scale = min(SCREEN_WIDTH, SCREEN_HEIGHT) / qr_size;
+    int qr_x = 64;
+    int qr_y = 0;
+
+    for (int y = 0; y < qr_size; y++) {
+        for (int x = 0; x < qr_size; x++) {
+            if (esp_qrcode_get_module(qrcode, x, y)) {
+                display.fillRect(qr_x + x * scale, qr_y + y * scale, scale, scale, 1);
+            }
+        }
+    }
+}
+
 void setup_wifi() {
   char ssid[28];
-  char password[10]; // leave password empty for now
+  char password[10];
+  char login_msg[100];
   uint32_t chipId = 0;
   for (int i = 0; i < 17; i = i + 8) {
     chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
@@ -226,10 +247,42 @@ void setup_wifi() {
   itoa(randNumber, password, 10);
   Serial.print("WIFI Password:");
   Serial.println(password);
+  sprintf(login_msg, "WIFI:T:WPA;S:%s;P:%i;;", ssid, randNumber);
+
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println();
+  display.println("Scan for");
+  display.println(NAME);
+  display.println("setup or");
+  display.println("press");
+  display.println("button.");
+  esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
+  cfg.display_func = drawQRCode;
+  cfg.max_qrcode_version = 10;  // Adjust as needed
+  cfg.qrcode_ecc_level = ESP_QRCODE_ECC_LOW;
+  esp_err_t ret = esp_qrcode_generate(&cfg, login_msg);
+  if (ret != ESP_OK) {
+      Serial.println("Failed to generate QR code");
+      return;
+  }
+  display.display();
 
   wm.setConfigPortalBlocking(false);
-  wm.setConfigPortalTimeout(60);
-  wm.autoConnect(ssid, password);
+  wm.setConfigPortalTimeout(320);
+  if (wm.autoConnect(ssid, password)) {
+    Serial.println("Wifi connected!");
+  } else {
+    Serial.println("No wifi connection.");
+    for (int i=0; i<60; ++i) {
+      if (button_pressed) break;
+      delay(1000);
+    }
+    button_pressed = false;
+  }
+  display.clearDisplay();
+  display.setCursor(0,0);
+
 }
 
 
@@ -238,10 +291,6 @@ void setup() {
 
   setup_display();
 
-  setup_wifi();
-
-
-
   if (USE_ESC) esc_setup();
   if (USE_PWM) pwm_setup();
 
@@ -249,9 +298,19 @@ void setup() {
 
   setup_button();
 
-  display.println("Ready!");
+  setup_wifi();
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println(TITLE);
+  display.println(LINK);
+  display.println();
+  display.print("CPAP: ");
+  display.print(pressure/10);
+  display.println(" cm H2O");
+  display.println("Press to start...");
   display.display();
-  Serial.println("start");
+  Serial.println("READY");
   state = STATE_READY;
   delay(1000);
 }
