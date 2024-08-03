@@ -145,6 +145,8 @@ void setup_display() {
     for(;;);
   }
 
+  display.setRotation(2);
+
   // Clear the display buffer
   display.clearDisplay();
 
@@ -187,7 +189,7 @@ void cpap(void *params) {
   TickType_t last_wake_time = xTaskGetTickCount();
   const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
   double input, output;
-  PID pid(&input, &output, &pressure, 4, 3, 0, USE_ESC ? ESC_MIN : 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
+  PID pid(&input, &output, &pressure, 8, 1, 0, 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
 
   while (!button_pressed) {
     int now = millis();
