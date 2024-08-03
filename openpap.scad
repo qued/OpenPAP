@@ -23,9 +23,9 @@ module motor() {
 }
 
 module motor_mounts() {
-  for (i=[0:2]) translate([i*7-10,15,0]) 
+!  for (i=[0:2]) translate([i*7-10,15,0]) 
   difference() {
-    cube([6, 15, 6]);
+    cube([6, 19, 6]);
     translate([2,0,3]) cube([2, 15, 3]);
   }
   difference() {
@@ -135,7 +135,7 @@ module lid() {
 }
 
 //motor();
-//motor_mounts();
-shell();
+motor_mounts();
+//shell();
 //translate([0,0,2*T]) lid();
 //display();
