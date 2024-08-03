@@ -1,5 +1,4 @@
 #include "HX711.h"
-#include <PID_v1.h>
 #include <ESP32Servo.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -44,6 +43,50 @@ enum State {
 };
 
 State state = STATE_INIT;
+
+class PID {
+  public:
+
+	double kp;
+  double ki;
+  double kd;
+  double *input;
+  double *output; 
+  double *setpoint;
+	double output_sum, last_input;
+	double out_min, out_max;
+
+  PID(double* input, double* output, double* setpoint, double Kp, double Ki, double Kd, double out_min, double out_max) {
+    this->output = output;
+    this->input = input;
+    this->setpoint = setpoint;
+    this->out_min = out_min;
+    this->out_max = out_max;
+    this->kp = Kp;
+    this->ki = Ki;
+    this->kd = Kd;
+    output_sum = *output;
+    last_input = *input;
+    if(output_sum > out_max) output_sum = out_max;
+    else if(output_sum < out_min) output_sum = out_min;
+  }
+
+  void compute() {
+    double input = *(this->input);
+    double error = *setpoint - input;
+    double delta_input = (input - last_input);
+    output_sum+= (ki * error);
+    if(output_sum > out_max) output_sum = out_max;
+    else if(output_sum < out_min) output_sum = out_min;
+    double output = kp * error;
+    output += output_sum - kd * delta_input;
+    if(output > out_max) output = out_max;
+    else if(output < out_min) output = out_min;
+    *(this->output) = output;
+  }
+
+};
+
 
 
 void esc_setup() {
@@ -121,56 +164,51 @@ void setup_button() {
 }
 
 void cpap(void *params) {
-//  TickType_t xLastWakeTime = xTaskGetTickCount();
-//  const TickType_t xFrequency = 40 / portTICK_PERIOD_MS;
-  double Setpoint, Input, Output;
-  Setpoint = 70;
-  PID myPID(&Input, &Output, &Setpoint, 3, 3, 0, DIRECT);
-  myPID.SetMode(AUTOMATIC);
-  //myPID.SetSampleTime(50);
-  if (USE_ESC) myPID.SetOutputLimits(0,ESC_MAX-ESC_MIN);
-  if (USE_PWM) myPID.SetOutputLimits(0,512);
+  TickType_t last_wake_time = xTaskGetTickCount();
+  const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
+  double set_point, input, output;
+  set_point = 70;
+  PID pid(&input, &output, &set_point, 4, 3, 0, USE_ESC ? ESC_MIN : 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
 
   while (!button_pressed) {
-    Input = scale.get_value(1) / CALIBRATION;
-    if (myPID.Compute()) {
-      if (USE_PWM) ledcWrite(PWM_PIN, (int)Output);
-      if (USE_ESC) ESC.writeMicroseconds(ESC_MIN+(int)Output);
-      double fan_pct = Output*100/(USE_ESC ? ESC_MAX-ESC_MIN : 512);
-      Serial.print("pressure:");
-      Serial.print(Input);
-      Serial.print(",fan:");
-      Serial.print(fan_pct);
-//      Serial.print(",now:");
-//      Serial.print(millis());
-      Serial.println();
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.println("Open CPAP / BiPAP\n");
-      display.println("Pressure (cm H2O)");
-      display.print("");
-      display.print(Setpoint/10);
-      display.print(" => ");
-      display.println(Input/10);
-      display.println();
-      display.println("Fan (% => RPM)");
-      display.print("");
-      display.print(fan_pct);
-      display.print(" => ");
-      display.println(tach_ma/tach_ma_weight*60);
-      display.display();
-      //*/
-    }
-//    vTaskDelayUntil(&xLastWakeTime, xFrequency);
+    int now = millis();
+    input = scale.get_value(1) / CALIBRATION;
+    pid.compute();
+    if (USE_PWM) ledcWrite(PWM_PIN, (int)output);
+    if (USE_ESC) ESC.writeMicroseconds(ESC_MIN+(int)output);
+    double fan_pct = output*100/(USE_ESC ? ESC_MAX-ESC_MIN : 512);
+    Serial.print("pressure:");
+    Serial.print(input/10);
+    Serial.print(",fan:");
+    Serial.print(fan_pct);
+    Serial.print(",now:");
+    Serial.print(now);
+    Serial.println();
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("Open CPAP / BiPAP\n");
+    display.println("Pressure (cm H2O)");
+    display.print("");
+    display.print(set_point/10);
+    display.print(" => ");
+    display.println(input/10);
+    display.println();
+    display.println("Fan (% => RPM)");
+    display.print("");
+    display.print(fan_pct);
+    display.print(" => ");
+    display.println(tach_ma/tach_ma_weight*60);
+    display.display();
+    vTaskDelayUntil(&last_wake_time, delay_ms);
   }
   button_pressed = false;
-  wind_down(Output);
+  wind_down(output);
   ESP.restart();
 }
 
 
 void setup() {
-  Serial.begin(460800);
+  Serial.begin(115200);
 
   setup_display();
 
