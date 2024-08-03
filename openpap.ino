@@ -3,6 +3,9 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+
+
 
 // Define the pins for KY-040 rotary encoder
 #define CLK_PIN 5
@@ -34,6 +37,7 @@ HX711 scale;
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+WiFiManager wm;
 
 enum State {
   STATE_INIT,
@@ -45,45 +49,48 @@ enum State {
 State state = STATE_INIT;
 
 class PID {
+
+  private:
+
+    double kp;
+    double ki;
+    double kd;
+    double *input;
+    double *output; 
+    double *setpoint;
+    double output_sum, last_input;
+    double out_min, out_max;
+
   public:
 
-	double kp;
-  double ki;
-  double kd;
-  double *input;
-  double *output; 
-  double *setpoint;
-	double output_sum, last_input;
-	double out_min, out_max;
+    PID(double* input, double* output, double* setpoint, double Kp, double Ki, double Kd, double out_min, double out_max) {
+      this->output = output;
+      this->input = input;
+      this->setpoint = setpoint;
+      this->out_min = out_min;
+      this->out_max = out_max;
+      this->kp = Kp;
+      this->ki = Ki;
+      this->kd = Kd;
+      output_sum = *output;
+      last_input = *input;
+      if(output_sum > out_max) output_sum = out_max;
+      else if(output_sum < out_min) output_sum = out_min;
+    }
 
-  PID(double* input, double* output, double* setpoint, double Kp, double Ki, double Kd, double out_min, double out_max) {
-    this->output = output;
-    this->input = input;
-    this->setpoint = setpoint;
-    this->out_min = out_min;
-    this->out_max = out_max;
-    this->kp = Kp;
-    this->ki = Ki;
-    this->kd = Kd;
-    output_sum = *output;
-    last_input = *input;
-    if(output_sum > out_max) output_sum = out_max;
-    else if(output_sum < out_min) output_sum = out_min;
-  }
-
-  void compute() {
-    double input = *(this->input);
-    double error = *setpoint - input;
-    double delta_input = (input - last_input);
-    output_sum+= (ki * error);
-    if(output_sum > out_max) output_sum = out_max;
-    else if(output_sum < out_min) output_sum = out_min;
-    double output = kp * error;
-    output += output_sum - kd * delta_input;
-    if(output > out_max) output = out_max;
-    else if(output < out_min) output = out_min;
-    *(this->output) = output;
-  }
+    void compute() {
+      double input = *(this->input);
+      double error = *setpoint - input;
+      double delta_input = (input - last_input);
+      output_sum+= (ki * error);
+      if(output_sum > out_max) output_sum = out_max;
+      else if(output_sum < out_min) output_sum = out_min;
+      double output = kp * error;
+      output += output_sum - kd * delta_input;
+      if(output > out_max) output = out_max;
+      else if(output < out_min) output = out_min;
+      *(this->output) = output;
+    }
 
 };
 
@@ -164,6 +171,7 @@ void setup_button() {
 }
 
 void cpap(void *params) {
+  Serial.println("Starting...");
   TickType_t last_wake_time = xTaskGetTickCount();
   const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
   double set_point, input, output;
@@ -206,11 +214,33 @@ void cpap(void *params) {
   ESP.restart();
 }
 
+void setup_wifi() {
+  char ssid[28];
+  char password[10]; // leave password empty for now
+  uint32_t chipId = 0;
+  for (int i = 0; i < 17; i = i + 8) {
+    chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+  }
+  snprintf(ssid,25, "OpenPAP-%08X",chipId);
+  int randNumber = random(10000000, 99999999);
+  itoa(randNumber, password, 10);
+  Serial.print("WIFI Password:");
+  Serial.println(password);
+
+  wm.setConfigPortalBlocking(false);
+  wm.setConfigPortalTimeout(60);
+  wm.autoConnect(ssid, password);
+}
+
 
 void setup() {
   Serial.begin(115200);
 
   setup_display();
+
+  setup_wifi();
+
+
 
   if (USE_ESC) esc_setup();
   if (USE_PWM) pwm_setup();
@@ -242,31 +272,25 @@ void wind_down(double current_speed) {
 }
 
 void loop() {
-  int start = millis();
-  tach_ma = tach*tach_ma_weight + tach_ma*(1-tach_ma_weight);
-  tach = 0;
+  wm.process();
   if (state==STATE_RUNNING) {
-    delay(1000);
+    delay(100);
   } else
-
   if (state==STATE_READY) {
     if (button_pressed) {
       button_pressed = false;
       state = STATE_RUNNING;
-      Serial.println("Starting...");
     xTaskCreatePinnedToCore(cpap, "cpap", 4096, (void *)1, 1, NULL, 1);
     }
-    delay(500);
+    delay(100);
   } else
-
   if (state==STATE_ERROR) {
     if (button_pressed) {
       button_pressed = false;
       ESP.restart();
     }
   } else {
-    delay(1000);
+    delay(100);
   }
-
 }
 
