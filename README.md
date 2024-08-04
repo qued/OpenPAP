@@ -3,6 +3,9 @@ Open Source CPAP / BiPAP
 OpenPAP is an open hardware, open source CPAP / BiPAP solution than can be build for about **$120**.
 Use it as an emergency backup machine, a travel machine, a camping machine or your daily driver.
 
+![image](https://github.com/user-attachments/assets/87150fc5-7136-4654-b9ad-bc46e850a8fe)
+
+
 Hardware
 --------
 - Resmed motor ([example](https://www.amazon.com/gp/product/B0CHYMMM8G))
