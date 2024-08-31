@@ -30,6 +30,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Install Yarn Deps
+        run:  cd web-ui && yarn install
+      - name: Build PWA
+        run:  cd web-ui && yarn build
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
