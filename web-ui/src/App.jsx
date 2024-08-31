@@ -19,7 +19,7 @@ const layoutStyle = {
   overflow: 'hidden',
   width: 'calc(100% - 0px)',
   maxWidth: 'calc(100% - 0px)',
-  minHeight: '100vh',
+  paddingBottom:'2em',
 };
 
 const headerStyle = {
