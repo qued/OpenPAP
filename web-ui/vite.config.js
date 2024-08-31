@@ -12,27 +12,14 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'maskable-icon-512x512.png'],
       manifest: {
         name: 'OpenPAP',
+        id: 'org.openpap.settings',
         short_name: 'OpenPAP',
         description: 'Open Source CPAP/BiPAP Machine',
         theme_color: '#007d7d',
+        background_color: '#000000',
         "icons": [
           {
-            "src": "pwa-64x64.png",
-            "sizes": "64x64",
-            "type": "image/png"
-          },
-          {
-            "src": "pwa-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-          },
-          {
-            "src": "pwa-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-          },
-          {
-            "src": "maskable-icon-512x512.png",
+            "src": "maskable-icon.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
