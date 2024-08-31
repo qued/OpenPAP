@@ -1,18 +1,9 @@
 #include "HX711.h"
 #include <ESP32Servo.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Preferences.h>
 
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include <qrcode.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <NetworkUdp.h>
 #include <ArduinoOTA.h>
-
-
 
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -68,8 +59,6 @@ HX711 scale;
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-WiFiManager wm;
 
 enum State {
   STATE_INIT,
@@ -289,73 +278,6 @@ void cpap(void *params) {
   ESP.restart();
 }
 
-void drawQRCode(esp_qrcode_handle_t qrcode) {
-    int qr_size = esp_qrcode_get_size(qrcode);
-    int scale = min(SCREEN_WIDTH, SCREEN_HEIGHT) / qr_size;
-    int qr_x = 64;
-    int qr_y = 0;
-
-    for (int y = 0; y < qr_size; y++) {
-        for (int x = 0; x < qr_size; x++) {
-            if (esp_qrcode_get_module(qrcode, x, y)) {
-                display.fillRect(qr_x + x * scale, qr_y + y * scale, scale, scale, 1);
-            }
-        }
-    }
-}
-
-void setup_wifi() {
-  char ssid[28];
-  char password[10];
-  char login_msg[100];
-  uint32_t chipId = 0;
-  for (int i = 0; i < 17; i = i + 8) {
-    chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
-  }
-  snprintf(ssid,25, "OpenPAP-%08X",chipId);
-  int randNumber = random(10000000, 99999999);
-  itoa(randNumber, password, 10);
-  Serial.print("WIFI Password:");
-  Serial.println(password);
-  sprintf(login_msg, "WIFI:T:WPA;S:%s;P:%i;;", ssid, randNumber);
-
-  display.clearDisplay();
-  display.setCursor(0,0);
-  display.println();
-  display.println("Scan for");
-  display.println(NAME);
-  display.println("setup or");
-  display.println("press");
-  display.println("button.");
-  esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
-  cfg.display_func = drawQRCode;
-  cfg.max_qrcode_version = 10;  // Adjust as needed
-  cfg.qrcode_ecc_level = ESP_QRCODE_ECC_LOW;
-  esp_err_t ret = esp_qrcode_generate(&cfg, login_msg);
-  if (ret != ESP_OK) {
-      Serial.println("Failed to generate QR code");
-      return;
-  }
-  display.display();
-
-  wm.setConfigPortalBlocking(false);
-  wm.setConfigPortalTimeout(320);
-  if (wm.autoConnect(ssid, password)) {
-    Serial.println("Wifi connected!");
-    setup_ota();
-  } else {
-    Serial.println("No wifi connection.");
-    for (int i=0; i<60; ++i) {
-      if (button_pressed) break;
-      delay(1000);
-    }
-    button_pressed = false;
-  }
-  display.clearDisplay();
-  display.setCursor(0,0);
-
-}
-
 void setup_ota() {
   Serial.println("Setting up OTA...");
   //ArduinoOTA.setPassword("admin");
@@ -412,8 +334,6 @@ void setup() {
 
   setup_button();
 
-  setup_wifi();
-
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println(TITLE);
@@ -445,7 +365,6 @@ void wind_down(double current_speed) {
 }
 
 void loop() {
-  wm.process();
   ArduinoOTA.handle();
 
   if (state==STATE_RUNNING) {
