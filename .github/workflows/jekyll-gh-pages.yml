@@ -36,15 +36,19 @@ jobs:
           source: ./
           destination: ./_site
       - name: Copy PWA
-        run:  ls -l *
+        run:  ls -l .
       - name: Copy PWA
         run:  ls -l _site/*
+      - name: Copy PWA
+        run:  ls -l /github/workspace
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
       - name: Build PWA
         run:  cd web-ui && yarn build
       - name: Copy PWA
-        run:  ls -l *
+        run:  mkdir ./_site/settings
+      - name: Copy PWA
+        run:  mkdir ./settings
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
