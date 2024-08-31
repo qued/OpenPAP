@@ -28,6 +28,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install Arduino core dependencies
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+
+      - name: Install library dependencies
+        run: |
+          arduino-cli lib install ESP32Servo
+          arduino-cli lib install Adafruit_SSD1306
+          arduino-cli lib install HX711
+
+      - name: Compile Sketch
+        run:  arduino-cli compile --fqbn esp32:esp32 openpap.ino
+
+      - name: Find All Files
+        run: find .
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
@@ -35,6 +56,7 @@ jobs:
         with:
           source: ./
           destination: ./_site
+
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
       - name: Build PWA
