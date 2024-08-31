@@ -6,6 +6,5 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: '../_site/settings',
-    emptyOutDir: true,
   }
 })
