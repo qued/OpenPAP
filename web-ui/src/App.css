@@ -9,3 +9,7 @@
 Footer a {
   color: #ccc;
 }
+
+.Collapse-no-interior-padding .ant-collapse-content-box {
+  padding: 0 !important;
+}

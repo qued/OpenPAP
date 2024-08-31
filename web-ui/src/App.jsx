@@ -39,18 +39,21 @@ const footerStyle = {
   textAlign: 'center',
   backgroundColor: '#111',
   color: '#ccc',
+  padding: '.5em 1em'
 };
 
 const { darkAlgorithm } = theme;
 
 const CHARACTERISTICS = [
   {
-    name: 'Version',
+    name: 'version',
+    display_name: 'Version',
     type: 'str',
     id: "7c816628-672a-11ef-a20f-535e28811a27",
   },
   {
-    name: 'Pressure',
+    name: 'pressure',
+    display_name: 'Pressure',
     type: 'float',
     id: "8387ecb2-551e-4665-83e4-7f0fffd1f850",
     units: 'cm H2O'
@@ -92,15 +95,25 @@ const App = () => {
       console.error('Connection failed!', error);
       set_loading(false)
     }
-}
+  }
+
+  function disconnect() {
+    if (confirm("Disconnect from your PAP machine?")) {
+      if (device.gatt.connected) device.gatt.disconnect()
+      set_device(null)
+      }
+  }
 
   return (
     <ConfigProvider theme={{ algorithm: darkAlgorithm }}>
     <Flex gap="middle" wrap>
       <Layout style={layoutStyle}>
-        <Header style={headerStyle}>My PAP Machine</Header>
+        <Header style={headerStyle}>{ device ? 'Settings' : 'My Machine' }</Header>
         <Content style={contentStyle}>
-          { device ? <Device characteristics={characteristics}/> : <Space direction="vertical">
+          { device ? <>
+              <Device characteristics={characteristics} />
+              <Button type="text" style={{color:'#800'}} onClick={()=>disconnect()}>Disconnect</Button>
+            </> : <Space direction="vertical">
             <img src='machine.png' style={{width:'100%', padding:'4em'}} />
 
             { disconnected ? 
@@ -115,7 +128,6 @@ const App = () => {
             <Button onClick={()=>connect()} type="primary" icon={<WifiOutlined />} iconPosition='end' loading={loading}>Connect</Button>
           </Space> }
         </Content>
-        <Footer style={footerStyle}><a href='https://openpap.org'>OpenPAP.org</a></Footer>
       </Layout>
     </Flex>
     </ConfigProvider>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { List, Spin, Flex, InputNumber } from 'antd';
+import { List, Spin, Flex, InputNumber, Collapse } from 'antd';
 import { EditOutlined, StopOutlined, CloseOutlined, SaveOutlined } from '@ant-design/icons';
 
 
@@ -22,13 +22,31 @@ export const Device = (props) => {
     })).then(()=> set_values(new_values))
   }, [props.characteristics]) 
 
-  return (
-    <List style={{textAlign:'left'}}
+  function build_children(fields) {
+    return  <List style={{textAlign:'left'}}
       size='large'
-      dataSource={props.characteristics}
+      dataSource={props.characteristics.filter(c=>fields.includes(c.name))}
       renderItem={(characteristic) => <Characteristic {...characteristic} value={values[characteristic.id]} />}
     />
+  }
+
+  const items = [
+    {
+      key: 'general',
+      label: "General",
+      children: build_children(['pressure'])
+    },
+    {
+      key: 'system',
+      label: "System",
+      children: build_children(['version'])
+    },
+  ]
+
+  return (
+    <Collapse items={items} defaultActiveKey={['general']} className='Collapse-no-interior-padding' style={{margin:'1em'}} />
   );
+
 }
 
 const Characteristic = (props) => {
@@ -60,7 +78,7 @@ const Characteristic = (props) => {
   return (
     <List.Item actions={actions}>
       <Flex justify='space-between' style={{flexGrow:1}}>
-        <div>{props.name}:</div>
+        <div>{props.display_name}:</div>
         { editing ? <InputNumber disabled={saving} autoFocus precision={2} min={1} max={20} onPressEnter={()=>save()} value={input_value} onChange={(v)=>set_input_value(v)} /> : <div>{value} {props.units}</div> }
       </Flex>
     </List.Item>
