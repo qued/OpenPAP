@@ -3,6 +3,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Preferences.h>
+
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <qrcode.h>
 #include <WiFi.h>
@@ -11,6 +13,25 @@
 #include <ArduinoOTA.h>
 
 
+
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
+#define VERSION "0.1.0"
+
+#define OPENPAP_BLE_SERVICE   "ab119f42-66fa-11ef-99b5-2b0355ed36bb"
+#define CHARID_VERSION        "7c816628-672a-11ef-a20f-535e28811a27"
+#define CHARID_CPAP           "8387ecb2-551e-4665-83e4-7f0fffd1f850"
+#define CHARID_IPAP           "1da0bb42-66fb-11ef-9518-3bea9dfbdfe7"
+#define CHARID_EPAP           "1e0ee004-66fb-11ef-94c7-571be3538e36"
+
+
+BLEServer *server = NULL;
+BLEService *service = NULL;
+BLEAdvertising *advertising = NULL;
+
+Preferences preferences;
 
 
 // Define the pins for KY-040 rotary encoder
@@ -28,7 +49,7 @@
 #define SCK_PIN 16
 #define OUT_PIN 17
 
-#define ESC_MIN 900
+#define ESC_MIN 1000
 #define ESC_MAX 2000
 
 #define CALIBRATION 6283.0
@@ -105,19 +126,62 @@ class PID {
 
 };
 
-double pressure = 70; // mmH2O
+double pressure = 10; // mmH2O
+
+void setup_preferences() {
+  preferences.begin("OpenPAP", false);
+  if (preferences.isKey("CPAP")) {
+    pressure = preferences.getFloat("CPAP");
+    Serial.printf("Loaded CPAP pressure: %f mmH20\n", pressure);
+  } else {
+    Serial.printf("No CPAP pressure saved, using default: %f mmH20\n", pressure);
+  }
+}
+
+class CharCPAPCallback: public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    pressure = std::__cxx11::stof(pCharacteristic->getValue().c_str()) * 10;
+    preferences.putFloat("CPAP", pressure);
+    Serial.printf("BLE set CPAP: %f mmH20\n", pressure);
+  }
+};
+
+char device_name[100];
+
+void ble_setup() {
+  snprintf(device_name, 100, "OpenPAP - %llX", ESP.getEfuseMac());
+  BLEDevice::init(device_name);
+  server = BLEDevice::createServer();
+  service = server->createService(OPENPAP_BLE_SERVICE);
+  BLECharacteristic* char_version = service->createCharacteristic(CHARID_VERSION, BLECharacteristic::PROPERTY_READ);
+  char_version->setValue((uint8_t*)VERSION, strlen(VERSION));
+  BLECharacteristic* char_cpap = service->createCharacteristic(CHARID_CPAP, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  std::string pressure_s = std::to_string(pressure/10);
+  char_cpap->setValue((uint8_t*)pressure_s.c_str(), pressure_s.length());
+  char_cpap->setCallbacks(new CharCPAPCallback());
+
+  service->start();
+  advertising = BLEDevice::getAdvertising();
+  advertising->addServiceUUID(OPENPAP_BLE_SERVICE);
+  advertising->setScanResponse(true);
+  advertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+  advertising->setMinPreferred(0x12);
+  BLEDevice::startAdvertising();
+  Serial.println("BLE server started.");
+
+}
 
 void esc_setup() {
   display.println("Init ESC...");
   display.display();
   ESC.attach(ESC_PIN);
   ESC.writeMicroseconds(ESC_MIN);
-  /*for (int i=ESC_MIN; i<ESC_MIN+200; ++i) {
+  /*for (int i=ESC_MIN; i<ESC_MIN+300; ++i) {
     Serial.println(i);
     ESC.writeMicroseconds(i);
     delay(20);
   }
-  for (int i=ESC_MIN+200; i<ESC_MIN; --i) {
+  for (int i=ESC_MIN+300; i<ESC_MIN; --i) {
     Serial.println(i);
     ESC.writeMicroseconds(i);
     delay(20);
@@ -189,7 +253,7 @@ void cpap(void *params) {
   TickType_t last_wake_time = xTaskGetTickCount();
   const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
   double input, output;
-  PID pid(&input, &output, &pressure, 8, 1, 0, 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
+  PID pid(&input, &output, &pressure, .1, .1, 0, 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
 
   while (!button_pressed) {
     int now = millis();
@@ -332,9 +396,14 @@ void setup_ota() {
 }
 
 void setup() {
+  esp_log_level_set("*", ESP_LOG_DEBUG);
   Serial.begin(115200);
 
+  setup_preferences();
+  
   setup_display();
+
+  ble_setup();
 
   if (USE_ESC) esc_setup();
   if (USE_PWM) pwm_setup();
@@ -380,7 +449,7 @@ void loop() {
   ArduinoOTA.handle();
 
   if (state==STATE_RUNNING) {
-    delay(100);
+    delay(1000);
   } else
   if (state==STATE_READY) {
     if (button_pressed) {
@@ -388,7 +457,7 @@ void loop() {
       state = STATE_RUNNING;
     xTaskCreatePinnedToCore(cpap, "cpap", 4096, (void *)1, 1, NULL, 1);
     }
-    delay(100);
+    delay(1000);
   } else
   if (state==STATE_ERROR) {
     if (button_pressed) {
@@ -396,7 +465,7 @@ void loop() {
       ESP.restart();
     }
   } else {
-    delay(100);
+    delay(1000);
   }
 }
 

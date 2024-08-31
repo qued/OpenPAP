@@ -1,0 +1,11 @@
+#root {
+  width: 100%;
+  max-width: 1024pt;
+  margin: 0 auto;
+  text-align: center;
+  min-height: 100%;
+}
+
+Footer a {
+  color: #ccc;
+}
