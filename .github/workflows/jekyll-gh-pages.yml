@@ -39,6 +39,8 @@ jobs:
         run:  cd web-ui && yarn install
       - name: Build PWA
         run:  cd web-ui && yarn build
+      - name: Copy PWA
+        run:  mv web-ui/dist /github/workspace/_site/settings
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
