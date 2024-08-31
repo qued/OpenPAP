@@ -62,7 +62,26 @@ const CHARACTERISTICS = [
     id: "8387ecb2-551e-4665-83e4-7f0fffd1f850",
     units: 'cm H2O'
   },
+  {
+    name: 'kp',
+    display_name: 'Kp',
+    type: 'float',
+    id: "998332a0-67c6-11ef-b2df-e78aa6930f15",
+  },
+  {
+    name: 'ki',
+    display_name: 'Ki',
+    type: 'float',
+    id: "9ee75a0a-67c6-11ef-adef-b367f4c7b993",
+  },
+  {
+    name: 'kd',
+    display_name: 'Kd',
+    type: 'float',
+    id: "9f4ad8b4-67c6-11ef-a327-57bd08d0ce3f",
+  },
 ]
+
 
 const App = () => {
 

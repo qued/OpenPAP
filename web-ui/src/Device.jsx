@@ -41,6 +41,11 @@ export const Device = (props) => {
       label: "System",
       children: build_children(['version'])
     },
+    {
+      key: 'advanced',
+      label: "Advanced",
+      children: build_children(['kp','ki','kd'])
+    },
   ]
 
   return (
@@ -66,7 +71,7 @@ const Characteristic = (props) => {
     set_saving(false)
   }
   let actions = []
-  if (saving || !props.value) actions.push(<Spin />)
+  if (saving || props.value==null) actions.push(<Spin />)
   else {
     if (editing) {
       actions.push(<SaveOutlined style={{color:'green'}} onClick={()=>save()}/>)
@@ -79,7 +84,7 @@ const Characteristic = (props) => {
     <List.Item actions={actions}>
       <Flex justify='space-between' style={{flexGrow:1}}>
         <div>{props.display_name}:</div>
-        { editing ? <InputNumber disabled={saving} autoFocus precision={2} min={1} max={20} onPressEnter={()=>save()} value={input_value} onChange={(v)=>set_input_value(v)} /> : <div>{value} {props.units}</div> }
+        { editing ? <InputNumber disabled={saving} autoFocus precision={2} min={0} max={20} onPressEnter={()=>save()} value={input_value} onChange={(v)=>set_input_value(v)} /> : <div>{value} {props.units}</div> }
       </Flex>
     </List.Item>
   )

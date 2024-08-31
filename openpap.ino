@@ -16,6 +16,9 @@
 #define CHARID_CPAP           "8387ecb2-551e-4665-83e4-7f0fffd1f850"
 #define CHARID_IPAP           "1da0bb42-66fb-11ef-9518-3bea9dfbdfe7"
 #define CHARID_EPAP           "1e0ee004-66fb-11ef-94c7-571be3538e36"
+#define CHARID_KP             "998332a0-67c6-11ef-b2df-e78aa6930f15"
+#define CHARID_KI             "9ee75a0a-67c6-11ef-adef-b367f4c7b993"
+#define CHARID_KD             "9f4ad8b4-67c6-11ef-a327-57bd08d0ce3f"
 
 
 BLEServer *server = NULL;
@@ -73,9 +76,9 @@ class PID {
 
   private:
 
-    double kp;
-    double ki;
-    double kd;
+    double Kp;
+    double Ki;
+    double Kd;
     double *input;
     double *output; 
     double *setpoint;
@@ -90,9 +93,9 @@ class PID {
       this->setpoint = setpoint;
       this->out_min = out_min;
       this->out_max = out_max;
-      this->kp = Kp;
-      this->ki = Ki;
-      this->kd = Kd;
+      this->Kp = Kp;
+      this->Ki = Ki;
+      this->Kd = Kd;
       output_sum = *output;
       last_input = *input;
       if(output_sum > out_max) output_sum = out_max;
@@ -103,11 +106,11 @@ class PID {
       double input = *(this->input);
       double error = *setpoint - input;
       double delta_input = (input - last_input);
-      output_sum+= (ki * error);
+      output_sum+= (Ki * error);
       if(output_sum > out_max) output_sum = out_max;
       else if(output_sum < out_min) output_sum = out_min;
-      double output = kp * error;
-      output += output_sum - kd * delta_input;
+      double output = Kp * error;
+      output += output_sum - Kd * delta_input;
       if(output > out_max) output = out_max;
       else if(output < out_min) output = out_min;
       *(this->output) = output;
@@ -115,23 +118,40 @@ class PID {
 
 };
 
-double pressure = 10; // mmH2O
+double pressure = 1.0; // cmH2O
+double Kp = 0.4;
+double Ki = 0.01;
+double Kd = 0.0;
 
-void setup_preferences() {
-  preferences.begin("OpenPAP", false);
-  if (preferences.isKey("CPAP")) {
-    pressure = preferences.getFloat("CPAP");
-    Serial.printf("Loaded CPAP pressure: %f mmH20\n", pressure);
+void load_double(char* name, double* v) {
+  if (preferences.isKey(name)) {
+    *v = preferences.getFloat(name);
+    Serial.printf("Loaded %s: %f\n", name, *v);
   } else {
-    Serial.printf("No CPAP pressure saved, using default: %f mmH20\n", pressure);
+    Serial.printf("No %s pressure saved, using default: %f\n", name, *v);
   }
 }
 
-class CharCPAPCallback: public BLECharacteristicCallbacks {
+void setup_preferences() {
+  preferences.begin("OpenPAP", false);
+  load_double("CPAP", &pressure);
+  load_double("Kp", &Kp);
+  load_double("Ki", &Ki);
+  load_double("Kd", &Kd);
+}
+
+class CharDoubleCallback: public BLECharacteristicCallbacks {
+  char* name;
+  double* value_ptr;
+  public: 
+  CharDoubleCallback(char* name, double* value_ptr) {
+    this->value_ptr = value_ptr;
+    this->name = name;
+  }
   void onWrite(BLECharacteristic *pCharacteristic) {
-    pressure = std::__cxx11::stof(pCharacteristic->getValue().c_str()) * 10;
-    preferences.putFloat("CPAP", pressure);
-    Serial.printf("BLE set CPAP: %f mmH20\n", pressure);
+    *value_ptr = std::__cxx11::stof(pCharacteristic->getValue().c_str());
+    preferences.putFloat(name, *value_ptr);
+    Serial.printf("BLE set %s: %f cmH20\n", name, *value_ptr);
   }
 };
 
@@ -142,12 +162,29 @@ void ble_setup() {
   BLEDevice::init(device_name);
   server = BLEDevice::createServer();
   service = server->createService(OPENPAP_BLE_SERVICE);
+
   BLECharacteristic* char_version = service->createCharacteristic(CHARID_VERSION, BLECharacteristic::PROPERTY_READ);
   char_version->setValue((uint8_t*)VERSION, strlen(VERSION));
+
   BLECharacteristic* char_cpap = service->createCharacteristic(CHARID_CPAP, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
-  std::string pressure_s = std::to_string(pressure/10);
+  std::string pressure_s = std::to_string(pressure);
   char_cpap->setValue((uint8_t*)pressure_s.c_str(), pressure_s.length());
-  char_cpap->setCallbacks(new CharCPAPCallback());
+  char_cpap->setCallbacks(new CharDoubleCallback("CPAP", &pressure));
+
+  BLECharacteristic* char_Kp = service->createCharacteristic(CHARID_KP, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  std::string Kp_s = std::to_string(Kp);
+  char_Kp->setValue((uint8_t*)Kp_s.c_str(), Kp_s.length());
+  char_Kp->setCallbacks(new CharDoubleCallback("Kp", &Kp));
+
+  BLECharacteristic* char_Ki = service->createCharacteristic(CHARID_KI, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  std::string Ki_s = std::to_string(Ki);
+  char_Ki->setValue((uint8_t*)Ki_s.c_str(), Ki_s.length());
+  char_Ki->setCallbacks(new CharDoubleCallback("Ki", &Ki));
+
+  BLECharacteristic* char_Kd = service->createCharacteristic(CHARID_KD, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  std::string Kd_s = std::to_string(Kd);
+  char_Kd->setValue((uint8_t*)Kd_s.c_str(), Kd_s.length());
+  char_Kd->setCallbacks(new CharDoubleCallback("Kd", &Kd));
 
   service->start();
   advertising = BLEDevice::getAdvertising();
@@ -242,7 +279,7 @@ void cpap(void *params) {
   TickType_t last_wake_time = xTaskGetTickCount();
   const TickType_t delay_ms = 100 / portTICK_PERIOD_MS;
   double input, output;
-  PID pid(&input, &output, &pressure, .1, .1, 0, 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
+  PID pid(&input, &output, &pressure, Kp, Ki, Kd, 0, USE_ESC ? ESC_MAX-ESC_MIN : 512);
 
   while (!button_pressed) {
     int now = millis();
@@ -252,7 +289,7 @@ void cpap(void *params) {
     if (USE_ESC) ESC.writeMicroseconds(ESC_MIN+(int)output);
     double fan_pct = output*100/(USE_ESC ? ESC_MAX-ESC_MIN : 512);
     Serial.print("pressure:");
-    Serial.print(input/10);
+    Serial.print(input);
     Serial.print(",fan:");
     Serial.print(fan_pct);
     Serial.print(",now:");
@@ -263,9 +300,9 @@ void cpap(void *params) {
     display.println(TITLE);
     display.println("Pressure (cm H2O)");
     display.print("");
-    display.print(pressure/10);
+    display.print(pressure);
     display.print(" => ");
-    display.println(input/10);
+    display.println(input);
     display.println();
     display.println("Fan (%)");
     display.print("");
@@ -340,7 +377,7 @@ void setup() {
   display.println(LINK);
   display.println();
   display.print("CPAP: ");
-  display.print(pressure/10);
+  display.print(pressure);
   display.println(" cm H2O");
   display.println("Press to start...");
   display.display();
