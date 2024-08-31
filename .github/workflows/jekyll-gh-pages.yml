@@ -35,20 +35,16 @@ jobs:
         with:
           source: ./
           destination: ./_site
-      - name: Copy PWA
-        run:  ls -l .
-      - name: Copy PWA
-        run:  ls -l _site/*
-      - name: Copy PWA
-        run:  ls -l /github/workspace
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
       - name: Build PWA
         run:  cd web-ui && yarn build
+      - name: Unlock _site
+        run:  sudo chown -R runner ./_site
       - name: Copy PWA
-        run:  mkdir ./_site/settings
-      - name: Copy PWA
-        run:  mkdir ./settings
+        run:  mv web-ui/dist ./_site/settings
+      - name: Relock _site
+        run:  sudo chown -R root ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
