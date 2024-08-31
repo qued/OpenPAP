@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import React from 'react';
 import { ConfigProvider, Space, theme, Button, Flex, Layout, Alert } from 'antd';
 const { Header, Footer, Sider, Content } = Layout;
-import { WifiOutlined } from '@ant-design/icons';
+
+const BTIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" style={{paddingTop:'2pt', marginRight:'-4pt'}} height="20pt" viewBox="0 -960 960 960" width="20pt" fill="#e8eaed"><path d="M440-80v-304L256-200l-56-56 224-224-224-224 56-56 184 184v-304h40l228 228-172 172 172 172L480-80h-40Zm80-496 76-76-76-74v150Zm0 342 76-74-76-76v150Z"/></svg>
+);
+
 
 import { Device } from './Device'
 
@@ -24,7 +28,7 @@ const headerStyle = {
   height: 64,
   paddingInline: 48,
   lineHeight: '64px',
-  backgroundColor: 'rgb(0, 21, 41)',
+  backgroundColor: '#007d7d',
   fontSize: '200%',
   fontWeight: 'bold',
 };
@@ -66,6 +70,7 @@ const App = () => {
   const [characteristics, set_characteristics] = useState(null)
   const [disconnected, set_disconnected] = useState(false)
   const [loading, set_loading] = useState(false)
+ 
 
   useEffect(()=>{
   }, []) 
@@ -105,10 +110,16 @@ const App = () => {
   }
 
   return (
-    <ConfigProvider theme={{ algorithm: darkAlgorithm }}>
+    <ConfigProvider theme={{
+      "token": {
+        "colorPrimary": "#007d7d",
+        "colorInfo": "#007d7d"
+      },
+      "algorithm": darkAlgorithm
+    }}>
     <Flex gap="middle" wrap>
       <Layout style={layoutStyle}>
-        <Header style={headerStyle}>{ device ? 'Settings' : 'My Machine' }</Header>
+        <Header style={headerStyle}>{ device ? 'Settings' : 'OpenPAP' }</Header>
         <Content style={contentStyle}>
           { device ? <>
               <Device characteristics={characteristics} />
@@ -121,11 +132,11 @@ const App = () => {
                 message="The Bluetooth connection to your PAP machine was disconnected."
                 type="error"
                 closable
-                style={{textAlign:'left'}}
+                style={{textAlign:'left', margin:'1em'}}
               />
               : null }
 
-            <Button onClick={()=>connect()} type="primary" icon={<WifiOutlined />} iconPosition='end' loading={loading}>Connect</Button>
+            <Button onClick={()=>connect()} size='large' type="primary" icon={<BTIcon/>} iconPosition='end' loading={loading}>Connect</Button>
           </Space> }
         </Content>
       </Layout>

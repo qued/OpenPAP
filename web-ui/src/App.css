@@ -1,6 +1,6 @@
 #root {
   width: 100%;
-  max-width: 1024pt;
+  max-width: 500pt;
   margin: 0 auto;
   text-align: center;
   min-height: 100%;
@@ -12,4 +12,10 @@ Footer a {
 
 .Collapse-no-interior-padding .ant-collapse-content-box {
   padding: 0 !important;
+}
+
+@media (min-width:500px) {
+  #root {
+    padding:2em 0;
+  }
 }
