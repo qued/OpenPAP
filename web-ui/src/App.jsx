@@ -15,7 +15,6 @@ const OPENPAP_BLE_SERVICE = "ab119f42-66fa-11ef-99b5-2b0355ed36bb"
 import './App.css'
 
 const layoutStyle = {
-  borderRadius: 8,
   overflow: 'hidden',
   width: 'calc(100% - 0px)',
   maxWidth: 'calc(100% - 0px)',
