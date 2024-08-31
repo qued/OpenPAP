@@ -35,12 +35,16 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - name: Copy PWA
+        run:  ls -l *
+      - name: Copy PWA
+        run:  ls -l _site/*
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
       - name: Build PWA
         run:  cd web-ui && yarn build
       - name: Copy PWA
-        run:  mv web-ui/dist ./_site/settings
+        run:  ls -l *
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
