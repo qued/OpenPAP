@@ -45,7 +45,7 @@ jobs:
 
       - name: Compile Sketch
         run: |
-          ln -s . openpap
+          ln -s openpap.ino OpenPAP.ino
           arduino-cli compile --fqbn esp32:esp32 openpap/openpap.ino
 
       - name: Find All Files
