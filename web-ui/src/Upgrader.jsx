@@ -26,7 +26,7 @@ export const Upgrader = (props) => {
           
     }, [])
 
-    if (props.version && compare(latest_version, props.version, '='))
+    if (props.version && compare(latest_version, props.version, '>'))
     return (
       <Alert
         style={{margin:'1em', textAlign:'left'}}
