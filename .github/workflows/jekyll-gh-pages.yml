@@ -55,7 +55,7 @@ jobs:
         run:  mv openpap.ino OpenPAP.ino
       - name: Compile Sketch
         run: |
-          arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir ./build OpenPAP.ino
+          arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir ./build OpenPAP.ino --build-property build.partitions=no_ota --build-property upload.maximum_size=2097152 
       - name: Write Version Info
         run:  grep "define VERSION" OpenPAP.ino | grep -o '[0-9.]*' > ./build/VERSION
 
