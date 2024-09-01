@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { List, Spin, Flex, InputNumber, Collapse } from 'antd';
 import { EditOutlined, StopOutlined, CloseOutlined, SaveOutlined } from '@ant-design/icons';
 
+import { Upgrader } from './Upgrader'
 
 
 export const Device = (props) => {
@@ -18,7 +19,7 @@ export const Device = (props) => {
       if (characteristic.type=='float') {
         v = parseFloat(v)
       }
-      new_values[characteristic.id] = v
+      new_values[characteristic.name] = v
     })).then(()=> set_values(new_values))
   }, [props.characteristics]) 
 
@@ -26,7 +27,7 @@ export const Device = (props) => {
     return  <List style={{textAlign:'left'}}
       size='large'
       dataSource={props.characteristics.filter(c=>fields.includes(c.name))}
-      renderItem={(characteristic) => <Characteristic {...characteristic} value={values[characteristic.id]} />}
+      renderItem={(characteristic) => <Characteristic {...characteristic} value={values[characteristic.name]} />}
     />
   }
 
@@ -49,7 +50,10 @@ export const Device = (props) => {
   ]
 
   return (
-    <Collapse items={items} defaultActiveKey={['general']} className='Collapse-no-interior-padding' style={{margin:'1em'}} />
+    <>
+      <Upgrader version={values.version} />
+      <Collapse items={items} defaultActiveKey={['general']} className='Collapse-no-interior-padding' style={{margin:'1em'}} />
+    </>
   );
 
 }

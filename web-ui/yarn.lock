@@ -3187,6 +3187,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"compare-versions@npm:^6.1.1":
+  version: 6.1.1
+  resolution: "compare-versions@npm:6.1.1"
+  checksum: 73fe6c4f52d22efe28f0a3be10df2afd704e10b3593360cd963e86b33a7a263c263b41a1361b69c30a0fe68bfa70fef90860c1cf2ef41502629d4402890fcd57
+  languageName: node
+  linkType: hard
+
 "compute-scroll-into-view@npm:^3.0.2":
   version: 3.1.0
   resolution: "compute-scroll-into-view@npm:3.1.0"
@@ -7435,6 +7442,7 @@ __metadata:
     "@vite-pwa/assets-generator": ^0.2.4
     "@vitejs/plugin-react-swc": ^3.5.0
     antd: ^5.20.3
+    compare-versions: ^6.1.1
     eslint: ^9.9.0
     eslint-plugin-react: ^7.35.0
     eslint-plugin-react-hooks: ^5.1.0-rc.0
