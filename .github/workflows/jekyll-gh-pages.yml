@@ -51,10 +51,13 @@ jobs:
           arduino-cli lib install "Adafruit SSD1306"
           arduino-cli lib install HX711
 
+      - name: Rename INO
+        run:  mv openpap.ino OpenPAP.ino
       - name: Compile Sketch
         run: |
-          mv openpap.ino OpenPAP.ino
           arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir ./build OpenPAP.ino
+      - name: Write Version Info
+        run:  grep "define VERSION" OpenPAP.ino | grep -o '[0-9.]*' > ./build/VERSION
 
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
