@@ -55,6 +55,12 @@ const CHARACTERISTICS = [
     id: "7c816628-672a-11ef-a20f-535e28811a27",
   },
   {
+    name: 'upgrade',
+    display_name: 'Upgrade',
+    type: 'json',
+    id: "ee420c74-680e-11ef-abdb-4777a846df35",
+  },
+  {
     name: 'pressure',
     display_name: 'Pressure',
     type: 'float',
@@ -93,6 +99,15 @@ const App = () => {
   useEffect(()=>{
   }, []) 
 
+  async function get_char(service, id) {
+    try {
+      return await service.getCharacteristic(id)
+    } catch (e) {
+      console.log('could not fetch characteristic', id, e)
+      return null
+    }
+  }
+
   async function connect() {
     set_disconnected(false)
     set_loading(true)
@@ -110,7 +125,7 @@ const App = () => {
       const service = await server.getPrimaryService(OPENPAP_BLE_SERVICE);
       set_characteristics(await Promise.all(CHARACTERISTICS.map(async (c) => ({
         ...c,
-        char: await service.getCharacteristic(c.id),
+        char: await get_char(service, c.id),
       }))))
       set_device(device)
       set_loading(false)

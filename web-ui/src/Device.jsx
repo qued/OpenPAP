@@ -12,6 +12,7 @@ export const Device = (props) => {
   useEffect(()=>{
     let new_values = {}
     Promise.all(props.characteristics.map(async(characteristic) => {
+      if (!characteristic.char) return
       let bytes = await characteristic.char.readValue();
       var v = null;
       let decoder = new TextDecoder('utf-8');
@@ -49,9 +50,21 @@ export const Device = (props) => {
     },
   ]
 
+  async function do_upgrade(ssid, pass) {
+    console.log('upgrade')
+    Promise.all(props.characteristics.filter(c=>c.name=='upgrade').map(async (c)=>{
+      if (!c.char) return console.log('no upgrade characteristic')
+      await c.char.writeValue(new TextEncoder().encode("s"+ssid));
+      await c.char.writeValue(new TextEncoder().encode("p"+pass));
+      await c.char.writeValue(new TextEncoder().encode("u"));
+      console.log('upgrade started')
+    }))
+  }
+
+
   return (
     <>
-      <Upgrader version={values.version} />
+      <Upgrader version={values.version} char={props.characteristics.filter(c=>c.name=='upgrade')[0]} upgrade={(ssid, pass)=>do_upgrade(ssid, pass)} />
       <Collapse items={items} defaultActiveKey={['general']} className='Collapse-no-interior-padding' style={{margin:'1em'}} />
     </>
   );

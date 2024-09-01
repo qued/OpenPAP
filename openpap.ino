@@ -3,16 +3,19 @@
 #include <Adafruit_SSD1306.h>
 #include <Preferences.h>
 
-#include <ArduinoOTA.h>
+#include "WiFi.h"
+#include <HTTPClient.h>
+#include <HTTPUpdate.h>
 
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
-#define VERSION "0.1.0"
+#define VERSION "0.2.0"
 
 #define OPENPAP_BLE_SERVICE   "ab119f42-66fa-11ef-99b5-2b0355ed36bb"
 #define CHARID_VERSION        "7c816628-672a-11ef-a20f-535e28811a27"
+#define CHARID_UPGRADE        "ee420c74-680e-11ef-abdb-4777a846df35"
 #define CHARID_CPAP           "8387ecb2-551e-4665-83e4-7f0fffd1f850"
 #define CHARID_IPAP           "1da0bb42-66fb-11ef-9518-3bea9dfbdfe7"
 #define CHARID_EPAP           "1e0ee004-66fb-11ef-94c7-571be3538e36"
@@ -155,6 +158,85 @@ class CharDoubleCallback: public BLECharacteristicCallbacks {
   }
 };
 
+bool do_upgrade = false;
+char ssid[100] = "";
+char password[100] = "";
+
+class CharUpgradeCallback: public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    String str = pCharacteristic->getValue();
+    Serial.printf("Got json: %s %s %s\n", str, ssid, password);
+    if (str.charAt(0)=='s') strncpy(ssid, str.c_str()+1, sizeof(ssid) - 1);
+    if (str.charAt(0)=='p') strncpy(password, str.c_str()+1, sizeof(ssid) - 1);
+    if (str.charAt(0)=='u') do_upgrade = true;
+  }
+};
+
+BLECharacteristic* char_upgrade;
+
+void update_started() {
+  Serial.println("CALLBACK:  HTTP update process started");
+  char* upgrade_status = "0";
+  char_upgrade->setValue((uint8_t*)upgrade_status, strlen(upgrade_status));
+}
+
+void update_finished() {
+  Serial.println("CALLBACK:  HTTP update process finished");
+  delay(10000);
+  ESP.restart();
+}
+
+void update_progress(int cur, int total) {
+  Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+  char upgrade_status[4];
+  itoa(100*cur/total, upgrade_status, 10);
+  char_upgrade->setValue((uint8_t*)upgrade_status, strlen(upgrade_status));
+}
+
+void update_error(int err) {
+  Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+  char upgrade_status[20] = "ERROR:";
+  itoa(err, upgrade_status+strlen(upgrade_status), 10);
+  char_upgrade->setValue((uint8_t*)upgrade_status, strlen(upgrade_status));
+}
+
+void run_upgrade() {
+  if (!do_upgrade) return;
+  Serial.println("Starting OTA...");
+  const char* url = "http://openpap.org/arduino/OpenPAP.ino.bin"; //upgrade["url"];
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  NetworkClient client;
+
+  // The line below is optional. It can be used to blink the LED on the board during flashing
+  // The LED will be on during download of one buffer of data from the network. The LED will
+  // be off during writing that buffer to flash
+  // On a good connection the LED should flash regularly. On a bad connection the LED will be
+  // on much longer than it will be off. Other pins than LED_BUILTIN may be used. The second
+  // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
+  //httpUpdate.setLedPin(LED_BUILTIN, LOW);
+
+  httpUpdate.onStart(update_started);
+  httpUpdate.onEnd(update_finished);
+  httpUpdate.onProgress(update_progress);
+  httpUpdate.onError(update_error);
+
+  t_httpUpdate_return ret = httpUpdate.update(client, url);
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED: Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str()); break;
+
+    case HTTP_UPDATE_NO_UPDATES: Serial.println("HTTP_UPDATE_NO_UPDATES"); break;
+
+    case HTTP_UPDATE_OK: Serial.println("HTTP_UPDATE_OK"); break;
+  }
+}
+
 char device_name[100];
 
 void ble_setup() {
@@ -185,6 +267,11 @@ void ble_setup() {
   std::string Kd_s = std::to_string(Kd);
   char_Kd->setValue((uint8_t*)Kd_s.c_str(), Kd_s.length());
   char_Kd->setCallbacks(new CharDoubleCallback("Kd", &Kd));
+
+  char_upgrade = service->createCharacteristic(CHARID_UPGRADE, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  std::string upgrade_status = "READY";
+  char_upgrade->setValue((uint8_t*)upgrade_status.c_str(), upgrade_status.length());
+  char_upgrade->setCallbacks(new CharUpgradeCallback());
 
   service->start();
   advertising = BLEDevice::getAdvertising();
@@ -315,45 +402,6 @@ void cpap(void *params) {
   ESP.restart();
 }
 
-void setup_ota() {
-  Serial.println("Setting up OTA...");
-  //ArduinoOTA.setPassword("admin");
-  ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {
-        type = "sketch";
-      } else {  // U_SPIFFS
-        type = "filesystem";
-      }
-
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) {
-        Serial.println("Auth Failed");
-      } else if (error == OTA_BEGIN_ERROR) {
-        Serial.println("Begin Failed");
-      } else if (error == OTA_CONNECT_ERROR) {
-        Serial.println("Connect Failed");
-      } else if (error == OTA_RECEIVE_ERROR) {
-        Serial.println("Receive Failed");
-      } else if (error == OTA_END_ERROR) {
-        Serial.println("End Failed");
-      }
-    });
-
-  ArduinoOTA.begin();
-}
-
 void setup() {
   esp_log_level_set("*", ESP_LOG_DEBUG);
   Serial.begin(115200);
@@ -402,7 +450,7 @@ void wind_down(double current_speed) {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  run_upgrade();
 
   if (state==STATE_RUNNING) {
     delay(1000);
