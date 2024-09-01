@@ -44,7 +44,9 @@ jobs:
           arduino-cli lib install HX711
 
       - name: Compile Sketch
-        run:  arduino-cli compile --fqbn esp32:esp32 openpap.ino
+        run: |
+          ln -s . openpap
+          arduino-cli compile --fqbn esp32:esp32 openpap/openpap.ino
 
       - name: Find All Files
         run: find .
