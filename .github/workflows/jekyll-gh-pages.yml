@@ -29,6 +29,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
 
@@ -46,18 +54,7 @@ jobs:
       - name: Compile Sketch
         run: |
           mv openpap.ino OpenPAP.ino
-          arduino-cli compile --fqbn esp32:esp32:esp32 OpenPAP.ino
-
-      - name: Find All Files
-        run: find .
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
+          arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir ./build OpenPAP.ino
 
       - name: Install Yarn Deps
         run:  cd web-ui && yarn install
@@ -67,8 +64,12 @@ jobs:
         run:  sudo chown -R runner ./_site
       - name: Copy PWA
         run:  mv web-ui/dist ./_site/settings
+      - name: Copy Arduino
+        run:  mv ./build ./_site/arduino
       - name: Relock _site
         run:  sudo chown -R root ./_site
+      - name: List _site
+        run:  find ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
