@@ -14,7 +14,6 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
-!.vscode/extensions.json
 .idea
 .DS_Store
 *.suo
@@ -34,3 +33,12 @@ _site
 .vscode/ipch
 
 platformio.ini
+
+include/README
+lib/README
+test/README
+
+notes/
+build123d/
+stl/
+calibrate_hx711/
