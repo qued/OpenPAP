@@ -31,8 +31,8 @@ MenuSystem::MenuSystem(DisplayManager* display, const MenuList* root)
 void MenuSystem::draw() {
   if (!_currentMenu) return;
 
-  if (_inViewMode) {
-    if (_activeViewDraw) _activeViewDraw();
+  if (_inViewMode && _activeView) {
+    _activeView->draw();
     return;
   }
 
@@ -91,27 +91,24 @@ void MenuSystem::goBack() {
   }
 }
 
-void MenuSystem::setActiveView(void (*loopFunc)(int, bool), void (*drawFunc)()) {
+void MenuSystem::setActiveView(ActiveView* view) {
   _inViewMode = true;
-  _activeViewLoop = loopFunc;
-  _activeViewDraw = drawFunc;
+  _activeView = view;
   draw();
 }
 
 void MenuSystem::exitActiveView() {
   _inViewMode = false;
-  _activeViewLoop = nullptr;
-  _activeViewDraw = nullptr;
+  _activeView = nullptr;
   draw();
 }
 
 void MenuSystem::update(int delta, bool buttonPressed) {
-  if (_inViewMode) {
-    if (_activeViewLoop) _activeViewLoop(delta, buttonPressed);
-    if (_activeViewDraw) _activeViewDraw();
-    return;
+  if (_inViewMode && _activeView) {
+    _activeView->loop(delta, buttonPressed);
+    _activeView->draw();
+  } else {
+    if (delta != 0) navigate(delta);
+    if (buttonPressed) select();
   }
-
-  if (delta != 0) navigate(delta);
-  if (buttonPressed) select();
 }

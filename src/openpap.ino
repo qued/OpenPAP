@@ -52,7 +52,7 @@ void setup() {
     display.begin();
     preferences.remove("esc_cal");  // Make sure the next boot is in normal mode
     preferences.end();
-    menu.setActiveView(escCalibrationMaxLoop, escCalibrationMaxDraw);
+    menu.setActiveView(&escCalibrationView2);
   } else {
     float Kp = preferences.getFloat("Kp", 1.0);
     float Ki = preferences.getFloat("Ki", 0.0);

@@ -33,6 +33,13 @@ private:
   size_t _size;
 };
 
+class ActiveView {
+public:
+  virtual void loop(int delta, bool buttonPressed) = 0;
+  virtual void draw() = 0;
+  virtual ~ActiveView() {}
+};
+
 class MenuSystem {
 public:
   MenuSystem(DisplayManager* display, const MenuList* root);
@@ -44,7 +51,7 @@ public:
 
   // Modal view (custom UI screen)
   void update(int delta, bool buttonPressed);
-  void setActiveView(void (*loopFunc)(int, bool), void (*drawFunc)());
+  void setActiveView(ActiveView* view);
   void exitActiveView();
 
   void draw();  // Can be called manually to refresh
@@ -63,8 +70,7 @@ private:
 
   // Modal state
   bool _inViewMode = false;
-  void (*_activeViewLoop)(int, bool) = nullptr;
-  void (*_activeViewDraw)() = nullptr;
+  ActiveView* _activeView = nullptr;
 };
 
 #endif

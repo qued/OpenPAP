@@ -26,23 +26,31 @@ MenuList mainMenu = MenuList({
 });
 
 // --- Actions ---
+TherapyView therapyView;
+MotorTestView motorTestView;
+PressureTestView pressureTestView;
+ESCCalibrationView1 escCalibrationView1;
+ESCCalibrationView2 escCalibrationView2;
+ESCCalibrationView3 escCalibrationView3;
+ESCCalibrationView4 escCalibrationView4;
+PIDCalibrationView pidCalibrationView;
 void notImplemented() {
   Serial.println("Not implemented");
 }
 
 void beginTherapy() {
   Serial.println("Entering therapy loop...");
-  menu.setActiveView(therapyLoop, therapyDraw);
+  menu.setActiveView(&therapyView);
 }
 
 void testMotor() {
   Serial.println("Entering motor test...");
-  menu.setActiveView(motorTestLoop, motorTestDraw);
+  menu.setActiveView(&motorTestView);
 }
 
 void testPressure() {
   Serial.println("Entering pressure test...");
-  menu.setActiveView(pressureTestLoop, pressureTestDraw);
+  menu.setActiveView(&pressureTestView);
 }
 
 void calibrateESC() {
@@ -52,12 +60,12 @@ void calibrateESC() {
   Serial.print("Wrote to preferences: ");
   Serial.println(preferences.getBool("esc_cal", false));
   preferences.end();
-  menu.setActiveView(escCalibrationPreLoop, escCalibrationPreDraw);
+  menu.setActiveView(&escCalibrationView1);
 }
 
 void calibratePID() {
   Serial.println("Entering PID calibration...");
-  menu.setActiveView(pidCalibrationLoop, pidCalibrationDraw);
+  menu.setActiveView(&pidCalibrationView);
 }
 
 void showAbout() {
@@ -73,7 +81,7 @@ void goBack() {
 
 // --- Therapy ---
 
-void therapyLoop(int delta, bool buttonPressed) {
+void TherapyView::loop(int delta, bool buttonPressed) {
   static enum { INIT, RAMP_UP, THERAPY, RAMP_DOWN, DONE} state = INIT;
   static float input = 0.0;
   static float output = 0.0;
@@ -146,7 +154,7 @@ void therapyLoop(int delta, bool buttonPressed) {
   }
 }
 
-void therapyDraw() {
+void TherapyView::draw() {
   display.printLines(
     "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
     "Pressure: " + String(pressure_sensor.lastReading) + " cmH2O"
@@ -155,7 +163,7 @@ void therapyDraw() {
 
 // --- Motor Test ---
 
-void motorTestLoop(int delta, bool buttonPressed) {
+void MotorTestView::loop(int delta, bool buttonPressed) {
   if (delta != 0) {
     double currThrottle = esc.getThrottle();
     double newThrottle = currThrottle + delta * .05;
@@ -169,7 +177,7 @@ void motorTestLoop(int delta, bool buttonPressed) {
   }
 }
 
-void motorTestDraw() {
+void MotorTestView::draw() {
   display.printLines(
     "Motor Test",
     "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
@@ -180,13 +188,13 @@ void motorTestDraw() {
 }
 
 // --- Pressure Sensor Test ---
-void pressureTestLoop(int delta, bool buttonPressed) {
+void PressureTestView::loop(int delta, bool buttonPressed) {
   if (buttonPressed) {
     menu.exitActiveView();  // Return to menu
   }
 }
 
-void pressureTestDraw() {
+void PressureTestView::draw() {
   display.printLines(
     "Pressure Sensor Test",
     "--------------------",
@@ -199,7 +207,9 @@ void pressureTestDraw() {
 }
 
 // --- ESC Calibration ---
-void escCalibrationPreLoop(int delta, bool buttonPressed) {
+// I experimented with this pattern to have the draw and loop share a state, 
+// but now that I've moved to a class this should be rewritten into a single view
+void ESCCalibrationView1::loop(int delta, bool buttonPressed) {
   if (buttonPressed) { // User cancels calibration
     preferences.begin("OpenPAP", false);
     preferences.remove("esc_cal");
@@ -208,7 +218,7 @@ void escCalibrationPreLoop(int delta, bool buttonPressed) {
   }
 }
 
-void escCalibrationPreDraw() {
+void ESCCalibrationView1::draw() {
   display.printLines(
     "Motor Calibration",
     "-----------------",
@@ -218,15 +228,15 @@ void escCalibrationPreDraw() {
   );
 }
 
-void escCalibrationMaxLoop(int delta, bool buttonPressed) {
+void ESCCalibrationView2::loop(int delta, bool buttonPressed) {
   if (buttonPressed) {
     esc.stop();
     Serial.println("Leaving ESC calibration mode...");
-    menu.setActiveView(escCalibrationMinLoop, escCalibrationMinDraw); // Go to next screen
+    menu.setActiveView(&escCalibrationView3); // Go to next screen
   }
 }
 
-void escCalibrationMaxDraw() {
+void ESCCalibrationView2::draw() {
   display.printLines(
     "Motor Calibration",
     "-----------------",
@@ -238,13 +248,13 @@ void escCalibrationMaxDraw() {
   );
 }
 
-void escCalibrationMinLoop(int delta, bool buttonPressed) {
+void ESCCalibrationView3::loop(int delta, bool buttonPressed) {
   if (buttonPressed) {
-    menu.setActiveView(escCalibrationEndLoop, escCalibrationEndDraw);
+    menu.setActiveView(&escCalibrationView4);
   }
 }
 
-void escCalibrationMinDraw() {
+void ESCCalibrationView3::draw() {
   display.printLines(
     "Motor Calibration",
     "-----------------",
@@ -256,9 +266,9 @@ void escCalibrationMinDraw() {
   );
 }
 
-void escCalibrationEndLoop(int delta, bool buttonPressed) {}
+void ESCCalibrationView4::loop(int delta, bool buttonPressed) {}
 
-void escCalibrationEndDraw() {
+void ESCCalibrationView4::draw() {
   display.printLines(
     "Motor Calibration",
     "-----------------",
@@ -272,7 +282,7 @@ void escCalibrationEndDraw() {
 
 // --- PID Calibration ---
 
-void pidCalibrationLoop(int delta, bool buttonPressed) {
+void PIDCalibrationView::loop(int delta, bool buttonPressed) {
   static enum { INIT, APPLY_STEP, LOGGING, ANALYSIS, DONE } state = INIT;
   static uint32_t startTime = 0;
   static const unsigned int MAX_SAMPLES = 160;
@@ -406,7 +416,7 @@ void pidCalibrationLoop(int delta, bool buttonPressed) {
   }
 }
 
-void pidCalibrationDraw() {
+void PIDCalibrationView::draw() {
   display.printLines(
     "CPAP Calibration",
     "----------------",

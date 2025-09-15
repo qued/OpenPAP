@@ -22,23 +22,48 @@ void calibratePID();
 void showAbout();
 void goBack();
 void notImplemented();
-void therapyLoop(int delta, bool buttonPressed);
-void therapyDraw();
-void motorTestLoop(int delta, bool buttonPressed);
-void motorTestDraw();
-void pressureTestLoop(int delta, bool buttonPressed);
-void pressureTestDraw();
-void escCalibrationPreLoop(int delta, bool buttonPressed);
-void escCalibrationPreDraw();
-void escCalibrationMaxLoop(int delta, bool buttonPressed);
-void escCalibrationMaxDraw();
-void escCalibrationMinLoop(int delta, bool buttonPressed);
-void escCalibrationMinDraw();
-void escCalibrationEndLoop(int delta, bool buttonPressed);
-void escCalibrationEndDraw();
-void pidCalibrationLoop(int delta, bool buttonPressed);
-void pidCalibrationDraw();
+class TherapyView : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class MotorTestView : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class PressureTestView : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class ESCCalibrationView1 : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class ESCCalibrationView2 : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class ESCCalibrationView3 : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class ESCCalibrationView4 : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
+class PIDCalibrationView : public ActiveView {
+public:
+  void loop(int delta, bool buttonPressed) override;
+  void draw() override;
+};
 
+extern ESCCalibrationView2 escCalibrationView2;
 extern MenuList mainMenu;
 extern MenuList settingsMenu;
 extern MenuList testComponentsMenu;
