@@ -106,9 +106,11 @@ void MenuSystem::exitActiveView() {
 void MenuSystem::update(int delta, bool buttonPressed) {
   if (_inViewMode && _activeView) {
     _activeView->loop(delta, buttonPressed);
-    _activeView->draw();
   } else {
     if (delta != 0) navigate(delta);
     if (buttonPressed) select();
+  }
+  if (_inViewMode && _activeView) {
+    _activeView->draw();
   }
 }
