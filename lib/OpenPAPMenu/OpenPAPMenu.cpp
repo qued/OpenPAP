@@ -371,19 +371,14 @@ void pidCalibrationLoop(int delta, bool buttonPressed) {
         break;
       }
 
-      // --- Step 5: Apply Cohen-Coon PID Tuning ---
-      float R = theta / tau;
+      // --- Step 5: Apply IMC PID Tuning ---
+      // This is a choice, lambda represents desired system response time.
       const float lambda = theta;
 
-      // float Kp = (1.35f + R / 20.0f) * (tau / (K * theta));
-      // float Ti = theta * (32.0f + 6.0f * R) / (13.0f + 8.0f * R); // sec
-      // float Td = theta * (4.0f * R) / (11.0f + 2.0f * R);         // sec
-
-      // float Ki = Kp / Ti;
-      // float Kd = Kp * Td;
       float Kp = tau / (K * (lambda + theta));
       float Ki = Kp / tau;
       float Kd = Kp * theta / 2;
+
       // --- Step 6: Store Results ---
       preferences.begin("OpenPAP", false);
       preferences.putFloat("Kp", Kp);
