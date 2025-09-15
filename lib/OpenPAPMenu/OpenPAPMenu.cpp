@@ -160,7 +160,6 @@ void motorTestLoop(int delta, bool buttonPressed) {
     double currThrottle = esc.getThrottle();
     double newThrottle = currThrottle + delta * .05;
 
-    // Update ESC here
     esc.setThrottle(newThrottle);
   }
 
