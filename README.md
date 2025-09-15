@@ -1,8 +1,6 @@
 Open Source CPAP / BiPAP
 ==========================
 
-**[--==[ Click here to set up your device over Bluetooth! ]==--](https://openpap.org/settings)**
-
 OpenPAP is an open hardware, open source CPAP / BiPAP solution than can be build for about **$120**.
 Use it as an emergency backup machine, a travel machine, a camping machine or your daily driver.
 
