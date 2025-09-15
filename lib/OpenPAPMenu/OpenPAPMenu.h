@@ -37,25 +37,14 @@ public:
   void loop(int delta, bool buttonPressed) override;
   void draw() override;
 };
-class ESCCalibrationView1 : public ActiveView {
+class ESCCalibrationView : public ActiveView {
 public:
+  ESCCalibrationView();
   void loop(int delta, bool buttonPressed) override;
   void draw() override;
-};
-class ESCCalibrationView2 : public ActiveView {
-public:
-  void loop(int delta, bool buttonPressed) override;
-  void draw() override;
-};
-class ESCCalibrationView3 : public ActiveView {
-public:
-  void loop(int delta, bool buttonPressed) override;
-  void draw() override;
-};
-class ESCCalibrationView4 : public ActiveView {
-public:
-  void loop(int delta, bool buttonPressed) override;
-  void draw() override;
+  void afterBoot();
+private:
+  enum {INIT, MAXTHROTTLE, MINTHROTTLE, DONE} _state;
 };
 class PIDCalibrationView : public ActiveView {
 public:
@@ -63,7 +52,7 @@ public:
   void draw() override;
 };
 
-extern ESCCalibrationView2 escCalibrationView2;
+extern ESCCalibrationView escCalibrationView;
 extern MenuList mainMenu;
 extern MenuList settingsMenu;
 extern MenuList testComponentsMenu;

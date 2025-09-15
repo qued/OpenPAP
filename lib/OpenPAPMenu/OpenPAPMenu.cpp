@@ -29,10 +29,7 @@ MenuList mainMenu = MenuList({
 TherapyView therapyView;
 MotorTestView motorTestView;
 PressureTestView pressureTestView;
-ESCCalibrationView1 escCalibrationView1;
-ESCCalibrationView2 escCalibrationView2;
-ESCCalibrationView3 escCalibrationView3;
-ESCCalibrationView4 escCalibrationView4;
+ESCCalibrationView escCalibrationView;
 PIDCalibrationView pidCalibrationView;
 void notImplemented() {
   Serial.println("Not implemented");
@@ -60,7 +57,7 @@ void calibrateESC() {
   Serial.print("Wrote to preferences: ");
   Serial.println(preferences.getBool("esc_cal", false));
   preferences.end();
-  menu.setActiveView(&escCalibrationView1);
+  menu.setActiveView(&escCalibrationView);
 }
 
 void calibratePID() {
@@ -190,6 +187,7 @@ void MotorTestView::draw() {
 // --- Pressure Sensor Test ---
 void PressureTestView::loop(int delta, bool buttonPressed) {
   if (buttonPressed) {
+    Serial.println("Leaving Pressure Sensor Test...");
     menu.exitActiveView();  // Return to menu
   }
 }
@@ -207,77 +205,91 @@ void PressureTestView::draw() {
 }
 
 // --- ESC Calibration ---
-// I experimented with this pattern to have the draw and loop share a state, 
-// but now that I've moved to a class this should be rewritten into a single view
-void ESCCalibrationView1::loop(int delta, bool buttonPressed) {
-  if (buttonPressed) { // User cancels calibration
-    preferences.begin("OpenPAP", false);
-    preferences.remove("esc_cal");
-    preferences.end();
-    menu.exitActiveView();  // Return to menu
+
+ESCCalibrationView::ESCCalibrationView(){ _state = INIT; }
+
+void ESCCalibrationView::afterBoot() {
+    _state = MAXTHROTTLE;
+}
+
+void ESCCalibrationView::loop(int delta, bool buttonPressed) {
+  switch (_state) {
+    case INIT:
+      if (buttonPressed) { // User cancels calibration
+        preferences.begin("OpenPAP", false);
+        preferences.remove("esc_cal");
+        preferences.end();
+        menu.exitActiveView();  // Return to menu
+      }
+      break;
+
+    case MAXTHROTTLE:
+      if (buttonPressed) {
+        esc.stop();
+        _state = MINTHROTTLE; // Go to next screen
+      }
+      break;
+
+    case MINTHROTTLE:
+      if (buttonPressed) {
+        _state = DONE; // Go to next screen
+      }
+      break;
+
+    case DONE:
+      // User is stuck here, because they should reboot
+      break;
   }
 }
 
-void ESCCalibrationView1::draw() {
-  display.printLines(
-    "Motor Calibration",
-    "-----------------",
-    "Power off and on now,",
-    "or press button to ",
-    "cancel..."
-  );
-}
+void ESCCalibrationView::draw() {
+  switch (_state) {
+    case INIT:
+      display.printLines(
+        "Motor Calibration",
+        "-----------------",
+        "Power off and on now,",
+        "or press button to ",
+        "cancel..."
+      );
+      break;
 
-void ESCCalibrationView2::loop(int delta, bool buttonPressed) {
-  if (buttonPressed) {
-    esc.stop();
-    Serial.println("Leaving ESC calibration mode...");
-    menu.setActiveView(&escCalibrationView3); // Go to next screen
+    case MAXTHROTTLE:
+      display.printLines(
+        "Motor Calibration",
+        "-----------------",
+        "Motor should emit 4 ",
+        "beeps.",
+        " ",
+        "Press button before ",
+        "they end."
+      );
+      break;
+
+    case MINTHROTTLE:
+      display.printLines(
+        "Motor Calibration",
+        "-----------------",
+        "Two short beeps",
+        "followed by two long",
+        "beeps, indicates",
+        "success.",
+        "Press to continue..."
+      );
+      break;
+
+    case DONE:
+      display.printLines(
+        "Motor Calibration",
+        "-----------------",
+        "Calibration complete!"
+        " ",
+        "Power off now.",
+        "(If calibration was",
+        "unsuccessful, retry)"
+      );
+      break;
   }
-}
-
-void ESCCalibrationView2::draw() {
-  display.printLines(
-    "Motor Calibration",
-    "-----------------",
-    "Motor should emit 4 ",
-    "beeps.",
-    " ",
-    "Press button before ",
-    "they end."
-  );
-}
-
-void ESCCalibrationView3::loop(int delta, bool buttonPressed) {
-  if (buttonPressed) {
-    menu.setActiveView(&escCalibrationView4);
-  }
-}
-
-void ESCCalibrationView3::draw() {
-  display.printLines(
-    "Motor Calibration",
-    "-----------------",
-    "Two short beeps",
-    "followed by two long",
-    "beeps, indicates",
-    "success.",
-    "Press to continue..."
-  );
-}
-
-void ESCCalibrationView4::loop(int delta, bool buttonPressed) {}
-
-void ESCCalibrationView4::draw() {
-  display.printLines(
-    "Motor Calibration",
-    "-----------------",
-    "Calibration complete!"
-    " ",
-    "Power off now.",
-    "(If calibration was",
-    "unsuccessful, retry)"
-  );
 }
 
 // --- PID Calibration ---
