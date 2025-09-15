@@ -1,11 +1,10 @@
 #include "MenuSystem.h"
 
-MenuList MenuList::withItems(std::initializer_list<MenuItem> items) {
-  MenuList list;
+MenuList::MenuList(std::initializer_list<MenuItem> items) {
+  _size = 0;
   for (const auto& item : items) {
-    list.add(item);
+    add(item);
   }
-  return list;
 }
 
 void MenuList::add(const MenuItem& item) {
@@ -17,7 +16,7 @@ void MenuList::add(const MenuItem& item) {
 }
 
 const MenuItem& MenuList::operator[](size_t i) const {
-  static MenuItem invalidItem{nullptr};
+  static MenuItem invalidItem;
   if (i >= _size) return invalidItem;
   return _items[i];
 }

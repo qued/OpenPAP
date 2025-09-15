@@ -11,12 +11,19 @@ struct MenuItem {
   const char* label;
   void (*onSelect)();         // Callback for non-submenu items
   MenuList* submenu = nullptr;
+  MenuItem() : label(nullptr), onSelect(nullptr), submenu(nullptr) {}
+
+  MenuItem(const char* lbl, void (*cb)()) 
+    : label(lbl), onSelect(cb), submenu(nullptr) {}
+
+  MenuItem(const char* lbl, MenuList* sub)
+    : label(lbl), onSelect(nullptr), submenu(sub) {}
 };
 
 class MenuList {
 public:
   static const size_t MaxItems = 10;
-  static MenuList withItems(std::initializer_list<MenuItem> items);
+  MenuList(std::initializer_list<MenuItem> items);
   void add(const MenuItem& item);
   const MenuItem& operator[](size_t i) const;
   size_t size() const;

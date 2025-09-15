@@ -1,4 +1,4 @@
-#include "DebouncedButton.h"
+#include "debouncedbutton.h"
 
 DebouncedButton::DebouncedButton(uint8_t pin, bool pullup, unsigned long debounceMs)
   : _pin(pin), _pullup(pullup), _debounceDelay(debounceMs) {

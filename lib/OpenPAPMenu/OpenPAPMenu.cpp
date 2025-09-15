@@ -1,27 +1,27 @@
 #include "OpenPAPMenu.h"
 
 // --- Submenus ---
-MenuList calibrationsMenu = MenuList::withItems({
+MenuList calibrationsMenu = MenuList({
   MenuItem("Calibrate Motor", calibrateESC),
   MenuItem("Calibrate CPAP", calibratePID),
   MenuItem("Back", goBack)
 });
 
-MenuList testComponentsMenu = MenuList::withItems({
+MenuList testComponentsMenu = MenuList({
   MenuItem("Test Motor", testMotor),
   MenuItem("Test Press. Sensor", testPressure),
   MenuItem("Back", goBack)
 });
 
-MenuList settingsMenu = MenuList::withItems({
-  MenuItem("Calibrations", nullptr, &calibrationsMenu),
-  MenuItem("Test Components", nullptr, &testComponentsMenu),
+MenuList settingsMenu = MenuList({
+  MenuItem("Calibrations", &calibrationsMenu),
+  MenuItem("Test Components", &testComponentsMenu),
   MenuItem("Back", goBack)
 });
 
-MenuList mainMenu = MenuList::withItems({
+MenuList mainMenu = MenuList({
   MenuItem("Start Therapy", beginTherapy),
-  MenuItem("Settings", nullptr, &settingsMenu),
+  MenuItem("Settings", &settingsMenu),
   MenuItem("About", showAbout)
 });
 
@@ -86,7 +86,7 @@ void therapyLoop(int delta, bool buttonPressed) {
   static float K = 0.0f;
   static float theta = 0.0f;
   static float tau = 0.0f;
-  static const float FAULT_TOLERANCE_FACTOR = 5.0f;
+  static const float FAULT_TOLERANCE_FACTOR = 50.0f;
   static float FAULT_THRESHOLD = 0.0f;
   static PID pid(&input, &output, setpoint, 1.0, 0.0, 0.0, out_min, out_max);
 
@@ -102,7 +102,7 @@ void therapyLoop(int delta, bool buttonPressed) {
       preferences.end();
       pid.setTunings(Kp, Ki, Kd);
       pid.reset();
-      FAULT_THRESHOLD = FAULT_TOLERANCE_FACTOR * setpoint * tau;
+      FAULT_THRESHOLD = FAULT_TOLERANCE_FACTOR * setpoint * (tau + theta);
       input = pressure_sensor.getPressure();
       last_read_time = pressure_sensor.lastReadTime();
       state = RAMP_UP;
@@ -121,6 +121,7 @@ void therapyLoop(int delta, bool buttonPressed) {
       pid.compute(dt); // output should update as a side effect.
       esc.setThrottle(output);
       last_read_time = current_read_time;
+      Serial.println(String(pid.error_sum) + " / " + FAULT_THRESHOLD);
       if (fabs(pid.error_sum) > FAULT_THRESHOLD ) {
         // Fault -- System is not responding
         Serial.println("Fault tolerance exceeded, exiting therapy loop.");
@@ -410,153 +411,6 @@ void pidCalibrationLoop(int delta, bool buttonPressed) {
       break;
   }
 }
-
-// void pidCalibrationLoop(int delta, bool buttonPressed) {
-//   static enum { INIT, RUNNING, ANALYSIS, DONE } state = INIT;
-
-//   static const float setpoint = 12.0f;          // Target pressure for autotune
-//   static const float highThrottle = 1.0f;       // Relay ON throttle
-//   static const float lowThrottle = 0.0f;        // Relay OFF throttle
-//   static const size_t MAX_SAMPLES = 800;        // Max samples to collect
-//   static const unsigned int minOscillations = 5; // Minimum oscillations before analysis
-
-//   static float pressureLog[MAX_SAMPLES];
-//   static uint32_t timeLog[MAX_SAMPLES];
-//   static size_t sampleCount = 0;
-
-//   static float lastError = 0.0f;
-//   static unsigned long lastZeroCrossTime = 0;
-//   static unsigned int zeroCrossCount = 0;
-//   static unsigned long startTime = 0;
-
-//   static float peakPressureMax = -1e6;
-//   static float peakPressureMin = 1e6;
-
-//   uint32_t now = millis();
-
-//   switch (state) {
-//     case INIT:
-//       Serial.println("Starting Relay Autotune...");
-//       sampleCount = 0;
-//       zeroCrossCount = 0;
-//       lastZeroCrossTime = now;
-//       startTime = now;
-//       lastError = setpoint - pressure_sensor.getPressure();
-//       peakPressureMax = -1e6;
-//       peakPressureMin = 1e6;
-
-//       esc.setThrottle(highThrottle);
-//       state = RUNNING;
-//       break;
-
-//     case RUNNING: {
-//       if (sampleCount < MAX_SAMPLES) {
-//         float pressure = pressure_sensor.getPressure();
-//         float error = setpoint - pressure;
-
-//         pressureLog[sampleCount] = pressure;
-//         timeLog[sampleCount] = now - startTime;
-//         sampleCount++;
-
-//         // Track peaks for amplitude calculation
-//         if (pressure > peakPressureMax) peakPressureMax = pressure;
-//         if (pressure < peakPressureMin) peakPressureMin = pressure;
-
-//         // Relay control: switch throttle on sign of error
-//         if (error < 0) {
-//           esc.setThrottle(lowThrottle);
-//         } else {
-//           esc.setThrottle(highThrottle);
-//         }
-
-//         // Detect zero-crossing of error
-//         if ((error > 0 && lastError <= 0) || (error < 0 && lastError >= 0)) {
-//           unsigned long zeroCrossTime = now;
-//           unsigned long period = zeroCrossTime - lastZeroCrossTime;
-
-//           // Ignore first zero crossing (no period yet)
-//           if (zeroCrossCount > 0) {
-//             // Accumulate period sum inside ANALYSIS phase
-//           }
-//           lastZeroCrossTime = zeroCrossTime;
-//           zeroCrossCount++;
-
-//           // Check if enough oscillations
-//           if (zeroCrossCount >= minOscillations * 2) {
-//             esc.stop();
-//             state = ANALYSIS;
-//           }
-//         }
-
-//         lastError = error;
-
-//       } else {
-//         Serial.println("Relay Autotune: Max samples reached without enough oscillations.");
-//         esc.stop();
-//         state = DONE;
-//       }
-//       break;
-//     }
-
-//     case ANALYSIS: {
-//       // Calculate average period Pu (time between zero crossings)
-//       if (zeroCrossCount < 2) {
-//         Serial.println("Not enough zero crossings for analysis.");
-//         state = DONE;
-//         break;
-//       }
-
-//       // Calculate periods between zero crossings
-//       unsigned long periodSum = 0;
-//       for (size_t i = 1; i < zeroCrossCount; i++) {
-//         periodSum += (timeLog[i] - timeLog[i - 1]);
-//       }
-//       float Pu = (periodSum / (zeroCrossCount - 1)) / 1000.0f; // seconds
-
-//       // Calculate amplitude of pressure oscillations
-//       float amplitude = peakPressureMax - peakPressureMin;
-
-//       // Calculate relay output amplitude
-//       float relayAmplitude = highThrottle - lowThrottle;
-
-//       if (amplitude < 0.01f) {
-//         Serial.println("Calibration failed: Oscillation amplitude too low");
-//         state = DONE;
-//         break;
-//       }
-
-//       // Calculate ultimate gain Ku = (4 * relayAmplitude) / (pi * amplitude)
-//       float Ku = (4.0f * relayAmplitude) / (3.14159f * amplitude);
-
-//       // Ziegler-Nichols PID tuning parameters
-//       float Kp = 0.45f * Ku;
-//       float Ki = Kp / (2.2 * Pu);
-//       float Kd = Kp * (Pu / 6.3);
-
-//       Serial.println("Relay Autotune complete:");
-//       Serial.printf("Pu = %.3f s, Ku = %.3f\n", Pu, Ku);
-//       Serial.printf("PID Gains: Kp=%.3f, Ki=%.3f, Kd=%.3f\n", Kp, Ki, Kd);
-
-//       // Store PID gains
-//       preferences.begin("OpenPAP", false);
-//       preferences.putFloat("Kp", Kp);
-//       preferences.putFloat("Ki", Ki);
-//       preferences.putFloat("Kd", Kd);
-//       preferences.end();
-
-//       state = DONE;
-//       break;
-//     }
-
-//     case DONE:
-//       if (buttonPressed) {
-//         state = INIT;
-//         menu.exitActiveView();
-//       }
-//       break;
-//   }
-// }
-
 
 void pidCalibrationDraw() {
   display.printLines(
