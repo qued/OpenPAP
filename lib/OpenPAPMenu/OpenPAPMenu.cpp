@@ -162,8 +162,8 @@ void TherapyView::draw() {
 
 void MotorTestView::loop(int delta, bool buttonPressed) {
   if (delta != 0) {
-    double currThrottle = esc.getThrottle();
-    double newThrottle = currThrottle + delta * .05;
+    float currThrottle = esc.getThrottle();
+    float newThrottle = roundf((currThrottle + delta * .05) * 100) / 100;
 
     esc.setThrottle(newThrottle);
   }
@@ -177,7 +177,7 @@ void MotorTestView::loop(int delta, bool buttonPressed) {
 void MotorTestView::draw() {
   display.printLines(
     "Motor Test",
-    "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
+    "Throttle: " + String(round(100*esc.getThrottle())) + "%",
     " ",
     "Rotate to adjust",
     "Press to exit"
