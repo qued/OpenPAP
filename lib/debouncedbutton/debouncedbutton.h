@@ -1,5 +1,4 @@
-#ifndef DEBOUNCED_BUTTON_H
-#define DEBOUNCED_BUTTON_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -23,5 +22,3 @@ private:
   bool _pressedFlag = false;
   bool _releasedFlag = false;
 };
-
-#endif

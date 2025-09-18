@@ -1,5 +1,4 @@
-#ifndef ESC_CONTROLLER_H
-#define ESC_CONTROLLER_H
+#pragma once
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
@@ -23,5 +22,3 @@ private:
   int _currentPulse;
   Servo _servo;
 };
-
-#endif

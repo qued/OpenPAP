@@ -1,5 +1,4 @@
-#ifndef MENU_SYSTEM_H
-#define MENU_SYSTEM_H
+#pragma once
 
 #include <Arduino.h>
 #include "DisplayManager.h"
@@ -72,5 +71,3 @@ private:
   bool _inViewMode = false;
   ActiveView* _activeView = nullptr;
 };
-
-#endif

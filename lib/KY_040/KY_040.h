@@ -1,5 +1,4 @@
-#ifndef ROTARY_ENCODER_H
-#define ROTARY_ENCODER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -26,5 +25,3 @@ private:
   volatile unsigned long _lastInterruptTime = 0;
   const unsigned long _debounceMicros;
 };
-
-#endif

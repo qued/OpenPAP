@@ -1,5 +1,4 @@
-#ifndef OPENPAP_MENU_H
-#define OPENPAP_MENU_H
+#pragma once
 
 #include <Arduino.h>
 #include <Preferences.h>
@@ -59,4 +58,3 @@ extern MenuList testComponentsMenu;
 extern ESCController esc;
 extern DisplayManager display;
 extern TM7711PressureSensor pressure_sensor;
-#endif

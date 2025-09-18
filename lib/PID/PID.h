@@ -1,5 +1,4 @@
-#ifndef PID_H
-#define PID_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -24,5 +23,3 @@ public:
 
   void reset();
 };
-
-#endif

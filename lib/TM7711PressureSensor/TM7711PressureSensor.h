@@ -1,5 +1,4 @@
-#ifndef TM7711_PRESSURE_SENSOR_H
-#define TM7711_PRESSURE_SENSOR_H
+#pragma once
 
 #include <Arduino.h>
 #include "HX711.h"
@@ -29,5 +28,3 @@ private:
   float _zero_value;
   HX711 _scale;
 };
-
-#endif

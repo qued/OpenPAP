@@ -1,5 +1,4 @@
-#ifndef DISPLAY_MANAGER_H
-#define DISPLAY_MANAGER_H
+#pragma once
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -22,5 +21,3 @@ private:
   uint8_t _width, _height;
   Adafruit_SSD1306 _display;
 };
-
-#endif
