@@ -4,7 +4,7 @@
 #include <Preferences.h>
 
 #include "MenuSystem.h"
-#include "ESCController.h"
+#include "ESC.h"
 #include "DisplayManager.h"
 #include "TM7711PressureSensor.h"
 #include "PID.h"
@@ -55,6 +55,6 @@ extern ESCCalibrationView escCalibrationView;
 extern MenuList mainMenu;
 extern MenuList settingsMenu;
 extern MenuList testComponentsMenu;
-extern ESCController esc;
+extern ESC esc;
 extern DisplayManager display;
 extern TM7711PressureSensor pressure_sensor;

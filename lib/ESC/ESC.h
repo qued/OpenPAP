@@ -3,9 +3,9 @@
 #include <Arduino.h>
 #include <ESP32Servo.h>
 
-class ESCController {
+class ESC {
 public:
-  ESCController(uint8_t pwmPin, int minPulse = 1000, int maxPulse = 2000);
+  ESC(uint8_t pwmPin, int minPulse = 1000, int maxPulse = 2000);
 
   void begin();
   void arm();

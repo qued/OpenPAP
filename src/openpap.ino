@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Preferences.h>
-#include "ESCController.h"
+#include "ESC.h"
 #include "KY_040.h"
 #include "DisplayManager.h"
 #include "TM7711PressureSensor.h"
@@ -28,7 +28,7 @@
 #define CALIBRATION_FACTOR 28426.0
 
 // --- Globals ---
-ESCController esc(ESC_PIN);
+ESC esc(ESC_PIN);
 RotaryEncoder encoder(CLK_PIN, DT_PIN);
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, SDA_PIN, SCL_PIN);
 TM7711PressureSensor pressure_sensor(SCK_PIN, OUT_PIN);
