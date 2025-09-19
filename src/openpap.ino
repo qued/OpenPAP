@@ -5,7 +5,7 @@
 #include "DisplayManager.h"
 #include "TM7711PressureSensor.h"
 #include "MenuSystem.h"
-#include "debouncedbutton.h"
+#include "DebouncedButton.h"
 #include "PID.h"
 #include "OpenPAPMenu.h"
 
