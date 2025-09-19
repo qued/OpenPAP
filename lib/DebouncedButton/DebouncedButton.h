@@ -4,7 +4,7 @@
 
 class DebouncedButton {
 public:
-  DebouncedButton(uint8_t pin, bool pullup = true, unsigned long debounceMs = 50);
+  DebouncedButton(const uint8_t pin, bool pullup = true, const unsigned long debounceMs = 50);
 
   void update();                  // Call this regularly in loop()
   bool isPressed() const;        // Current debounced state
