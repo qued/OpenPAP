@@ -12,8 +12,12 @@ public:
   void begin();
   void clear();
   void printLines(const String& line1, const String& line2 = "", const String& line3 = "", const String& line4 = "", const String& line5 = "", const String& line6 = "", const String& line7 = "");
+  void printTextAtLoc(const String& text, int16_t x, int16_t y);
   void showStartup(const String& title);
   void showError(const String& message);
+  void drawLine(uint x0, uint y0, uint x1, uint y1);
+  void drawFastHLine(int16_t x, int16_t yPos, int16_t width);
+  void display();
 
 private:
   uint8_t _sdaPin, _sclPin;

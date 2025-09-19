@@ -1,0 +1,24 @@
+#pragma once
+
+#include "MeasurementBuffer.h"
+#include "DisplayManager.h"
+
+class Graph {
+public:
+    Graph(const IMeasurementSource& source, DisplayManager& display, const String& header, int16_t width, int16_t height, int16_t xpos, int16_t ypos, float gridLineSpaceing);
+
+    void setHeader(const String& text);
+    void setDimensions(int16_t width, int16_t height);
+    void draw();
+    void setPosition(int16_t x, int16_t y);
+    void setGridlineSpacing(float spacing);
+
+private:
+    const IMeasurementSource& data;
+    DisplayManager& display;
+    int width, height;
+    int x = 0;
+    int y = 0;
+    float gridlineSpacing = 5.0f;
+    String header;
+};

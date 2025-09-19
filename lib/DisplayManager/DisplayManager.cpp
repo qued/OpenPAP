@@ -35,6 +35,23 @@ void DisplayManager::printLines(const String& line1, const String& line2, const 
   _display.display();
 }
 
+void DisplayManager::printTextAtLoc(const String& text, int16_t x, int16_t y) {
+  _display.setCursor(x, y);
+  _display.print(text);
+}
+
+void DisplayManager::drawLine(uint x0, uint y0, uint x1, uint y1) {
+  _display.drawLine(x0, y0, x1, y1, SSD1306_WHITE);
+}
+
+void DisplayManager::drawFastHLine(int16_t x, int16_t yPos, int16_t width) {
+  _display.drawFastHLine(x, yPos, width, SSD1306_WHITE);
+}
+
+void DisplayManager::display() {
+  _display.display();
+}
+
 void DisplayManager::showStartup(const String& title) {
   _display.clearDisplay();
   _display.setCursor(0, 0);
