@@ -94,6 +94,8 @@ void TherapyView::loop(int delta, bool buttonPressed) {
   static const float FAULT_TOLERANCE_FACTOR = 50.0f;
   static float FAULT_THRESHOLD = 0.0f;
   static PID pid(&input, &output, setpoint, 1.0, 0.0, 0.0, out_min, out_max);
+  static MeasurementBuffer<256> throttleBuffer;
+  static MeasurementBuffer<256> timeBuffer;
 
   switch (state) {
     case INIT: {
@@ -107,6 +109,7 @@ void TherapyView::loop(int delta, bool buttonPressed) {
       preferences.end();
       pid.setTunings(Kp, Ki, Kd);
       pid.reset();
+      pressureBuffer.reset();
       FAULT_THRESHOLD = FAULT_TOLERANCE_FACTOR * setpoint * (tau + theta);
       input = pressure_sensor.getPressure();
       last_read_time = pressure_sensor.lastReadTime();
@@ -121,12 +124,14 @@ void TherapyView::loop(int delta, bool buttonPressed) {
 
     case THERAPY:
       input = pressure_sensor.getPressure();
+      pressureBuffer.add(input);
       current_read_time = pressure_sensor.lastReadTime();
+      timeBuffer.add(input);
       dt = (current_read_time - last_read_time) / 1000.0f;
       pid.compute(dt); // output should update as a side effect.
       esc.setThrottle(output);
+      throttleBuffer.add(output);
       last_read_time = current_read_time;
-      Serial.println(String(pid.error_sum) + " / " + FAULT_THRESHOLD);
       if (fabs(pid.error_sum) > FAULT_THRESHOLD ) {
         // Fault -- System is not responding
         Serial.println("Fault tolerance exceeded, exiting therapy loop.");
@@ -152,10 +157,13 @@ void TherapyView::loop(int delta, bool buttonPressed) {
 }
 
 void TherapyView::draw() {
-  display.printLines(
-    "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
-    "Pressure: " + String(pressure_sensor.lastReading) + " cmH2O"
-  );
+  static Graph graph(pressureBuffer, display, String(" --==[ OpenPAP ]==--"), (int16_t)128, (int16_t)48, (int16_t)0, (int16_t)16, 5.0f);
+
+  graph.draw();
+  // display.printLines(
+  //   "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
+  //   "Pressure: " + String(pressure_sensor.lastReading) + " cmH2O"
+  // );
 }
 
 // --- Motor Test ---

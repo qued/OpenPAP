@@ -8,6 +8,8 @@
 #include "DisplayManager.h"
 #include "TM7711PressureSensor.h"
 #include "PID.h"
+#include "MeasurementBuffer.h"
+#include "Graph.h"
 
 extern MenuSystem menu;
 extern Preferences preferences;
@@ -25,6 +27,8 @@ class TherapyView : public ActiveView {
 public:
   void loop(int delta, bool buttonPressed) override;
   void draw() override;
+private:
+  MeasurementBuffer<256> pressureBuffer;
 };
 class MotorTestView : public ActiveView {
 public:
