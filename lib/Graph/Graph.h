@@ -5,7 +5,7 @@
 
 class Graph {
 public:
-    Graph(const IMeasurementSource& source, DisplayManager& display, const String& header, int16_t width, int16_t height, int16_t xpos, int16_t ypos, float gridLineSpaceing);
+    Graph(const IMeasurementSource& source, DisplayManager& display, const String& header, int16_t width, int16_t height, int16_t xpos, int16_t ypos, float gridLineSpacing);
 
     void setHeader(const String& text);
     void setDimensions(int16_t width, int16_t height);
