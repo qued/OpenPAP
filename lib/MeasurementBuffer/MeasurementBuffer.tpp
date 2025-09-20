@@ -71,7 +71,7 @@ float MeasurementBuffer<N>::average() const {
 
 template <size_t N>
 const float* MeasurementBuffer<N>::raw() const {
-    return buffer;
+    return buffer; // raw circular buffer, not logically ordered
 }
 
 template <size_t N>

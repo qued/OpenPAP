@@ -6,7 +6,7 @@ class IMeasurementSource {
 public:
     virtual size_t size() const = 0;
     virtual float get(size_t index) const = 0;
-    virtual void reset();
+    virtual void reset() = 0;
     virtual float min() const = 0;
     virtual float max() const = 0;
     virtual ~IMeasurementSource() = default;
