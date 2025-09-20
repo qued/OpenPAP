@@ -14,7 +14,7 @@ void RotaryEncoder::begin() {
     attachInterrupt(digitalPinToInterrupt(_clkPin), isrHandler, CHANGE);
 }
 
-void RotaryEncoder::isrHandler() {
+void IRAM_ATTR RotaryEncoder::isrHandler() {
     if (_instance) {
         _instance->handleInterrupt();
     }
@@ -24,18 +24,18 @@ void RotaryEncoder::handleInterrupt() {
     unsigned long now = micros();
 
     // Debounce: ignore if this interrupt fired too soon after the last
-    if (now - _lastInterruptTime < 2000) return;  // 2000µs = 2ms debounce
+    if (now - _lastInterruptTime < _debounceMicros) return;
     _lastInterruptTime = now;
 
     bool clk = digitalRead(_clkPin);
     bool dt  = digitalRead(_dtPin);
 
-    if (_lastCLK == HIGH && clk == LOW) { // new logic
+    if (_lastCLK == HIGH && clk == LOW) {
         int8_t direction = (clk != dt) ? 1 : -1;
         _rawDelta += direction;
         _position += direction;
     }
-    _lastCLK = clk; // new logic
+    _lastCLK = clk;
 }
 
 RotaryEncoder::Direction RotaryEncoder::getDirection() {
