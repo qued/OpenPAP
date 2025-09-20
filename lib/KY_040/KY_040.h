@@ -23,6 +23,6 @@ private:
     static RotaryEncoder* _instance;  // for static ISR
     volatile bool _lastCLK; // new logic
     volatile unsigned long _lastInterruptTime = 0;
-    // debounceMicros: reject changes faster than this many microseconds apart (default: 500 µs)
+    // debounceMicros: reject changes faster than this many microseconds apart (default: 2000 µs)
     const unsigned long _debounceMicros;
 };

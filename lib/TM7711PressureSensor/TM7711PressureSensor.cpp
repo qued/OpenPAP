@@ -1,19 +1,19 @@
 #include "TM7711PressureSensor.h"
 
-TM7711PressureSensor::TM7711PressureSensor(uint8_t sck_pin, uint8_t out_pin)
-    : _sck_pin(sck_pin), _out_pin(out_pin), _calibration_factor(1.0), _zero_value(0), _lastReading(0) {}
+TM7711PressureSensor::TM7711PressureSensor(uint8_t sckPin, uint8_t outPin)
+    : _sckPin(sckPin), _outPin(outPin), _calibrationFactor(1.0), _zeroValue(0), _lastReading(0) {}
 
 void TM7711PressureSensor::begin() {
-    _scale.begin(_out_pin, _sck_pin);
+    _scale.begin(_outPin, _sckPin);
 }
 
 void TM7711PressureSensor::tare() {
-    _zero_value = _scale.read_average(30);
+    _zeroValue = _scale.read_average(30);
 }
 
 double TM7711PressureSensor::getPressure() {
     float raw = getRawPressure();
-    _lastReading = (double)(raw - _zero_value) / _calibration_factor;
+    _lastReading = (double)(raw - _zeroValue) / _calibrationFactor;
     return _lastReading;
 }
 
@@ -26,7 +26,7 @@ float TM7711PressureSensor::getRawPressure() {
 }
 
 float TM7711PressureSensor::getZeroValue() const {
-    return _zero_value;
+    return _zeroValue;
 }
 
 unsigned long TM7711PressureSensor::lastReadTime() {
@@ -34,11 +34,11 @@ unsigned long TM7711PressureSensor::lastReadTime() {
 }
 
 double TM7711PressureSensor::getCalibrationFactor() const {
-    return _calibration_factor;
+    return _calibrationFactor;
 }
 
 void TM7711PressureSensor::setCalibrationFactor(double factor) {
-    _calibration_factor = factor;
+    _calibrationFactor = factor;
 }
 
 void TM7711PressureSensor::setRate(TM7711PressureSensorRate rate){

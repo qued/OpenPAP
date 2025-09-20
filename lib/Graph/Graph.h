@@ -14,11 +14,11 @@ public:
     void setGridlineSpacing(float spacing);
 
 private:
-    const IMeasurementSource& data;
-    DisplayManager& display;
-    int width, height;
-    int x = 0;
-    int y = 0;
-    float gridlineSpacing = 5.0f;
-    String header;
+    const IMeasurementSource& _data;
+    DisplayManager& _display;
+    int16_t _width, _height;
+    int16_t _x = 0;
+    int16_t _y = 0;
+    float _gridlineSpacing = 5.0f;
+    String _header;
 };

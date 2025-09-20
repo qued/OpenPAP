@@ -28,7 +28,7 @@ public:
     void loop(int delta, bool buttonPressed) override;
     void draw() override;
 private:
-    MeasurementBuffer<256> pressureBuffer;
+    MeasurementBuffer<256> _pressureBuffer;
 };
 class MotorTestView : public ActiveView {
 public:

@@ -33,9 +33,9 @@ public:
     const float* raw() const;
 
 private:
-    float buffer[N];
-    size_t writeIndex;
-    size_t filledSize;
+    float _buffer[N];
+    size_t _writeIndex;
+    size_t _filledSize;
 };
 
 #include "MeasurementBuffer.tpp"

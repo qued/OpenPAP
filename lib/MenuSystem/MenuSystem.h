@@ -59,9 +59,9 @@ private:
     DisplayManager* _display;
 
     // Menu state
-    static const int MAX_DEPTH = 5;
-    const MenuList* _menuStack[MAX_DEPTH];
-    int _indexStack[MAX_DEPTH];
+    static const int _MAX_DEPTH = 5;
+    const MenuList* _menuStack[_MAX_DEPTH];
+    int _indexStack[_MAX_DEPTH];
     int _depth;
 
     const MenuList* _currentMenu;

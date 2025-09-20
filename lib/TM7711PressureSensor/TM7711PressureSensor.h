@@ -7,7 +7,7 @@ enum TM7711PressureSensorRate {RATE10Hz, RATE40Hz};
 
 class TM7711PressureSensor {
 public:
-    TM7711PressureSensor(uint8_t sck_pin, uint8_t out_pin);
+    TM7711PressureSensor(uint8_t sckPin, uint8_t outPin);
 
     void begin();
     double getPressure();                     // Get calibrated pressure
@@ -21,10 +21,10 @@ public:
     void setRate(TM7711PressureSensorRate rate);
 
 private:
-    const uint8_t _sck_pin;
-    const uint8_t _out_pin;
-    double _calibration_factor;
+    const uint8_t _sckPin;
+    const uint8_t _outPin;
+    double _calibrationFactor;
     double _lastReading;
-    float _zero_value;
+    float _zeroValue;
     HX711 _scale;
 };

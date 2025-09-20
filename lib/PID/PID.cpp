@@ -1,40 +1,40 @@
 #include "PID.h"
 
-PID::PID(float* input, float* output, float setpoint, float Kp, float Ki, float Kd, float out_min, float out_max)
-    : input(input), output(output), setpoint(setpoint), Kp(Kp), Ki(Ki), Kd(Kd), out_min(out_min), out_max(out_max) {
-    
-    error_sum = 0;
-    last_input = *input;
+PID::PID(float* input, float* output, float setpoint, float Kp, float Ki, float Kd, float outMin, float outMax)
+    : _input(input), _output(output), _setpoint(setpoint), _Kp(Kp), _Ki(Ki), _Kd(Kd), _outMin(outMin), _outMax(outMax) {
+
+    errorSum = 0;
+    _lastInput = *input;
 }
 
 void PID::setTunings(float newKp, float newKi, float newKd) {
-    Kp = newKp;
-    Ki = newKi;
-    Kd = newKd;
+    _Kp = newKp;
+    _Ki = newKi;
+    _Kd = newKd;
 }
 
 void PID::compute(float dt) {
     if (dt == 0.0) {return;}
-    float in = *input;
-    float err = setpoint - in;
-    float dInput = (in - last_input) / dt;
+    float in = *_input;
+    float err = _setpoint - in;
+    float dInput = (in - _lastInput) / dt;
 
     // Anti-windup: only integrate if not saturated
-    // float potentialSum = output_sum + Ki * err * dt;
-    // if ((potentialSum < out_max && potentialSum > out_min) ||
-    //     (potentialSum > out_max && err < 0) ||
-    //     (potentialSum < out_min && err > 0)) {
-    //   output_sum = potentialSum;
+    // float potentialSum = outputSum + Ki * err * dt;
+    // if ((potentialSum < _outMax && potentialSum > _outMin) ||
+    //     (potentialSum > _outMax && err < 0) ||
+    //     (potentialSum < _outMin && err > 0)) {
+    //   outputSum = potentialSum;
     // }
-    error_sum += err * dt;
+    errorSum += err * dt;
 
-    float out = Kp * err + Ki * error_sum - Kd * dInput;
-    out = constrain(out, out_min, out_max);
-    *output = out;
-    last_input = in;
+    float out = _Kp * err + _Ki * errorSum - _Kd * dInput;
+    out = constrain(out, _outMin, _outMax);
+    *_output = out;
+    _lastInput = in;
 }
 
 void PID::reset() {
-    last_input = *input;
-    error_sum = 0;
+    _lastInput = *_input;
+    errorSum = 0;
 }

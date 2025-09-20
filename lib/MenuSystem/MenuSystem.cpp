@@ -66,7 +66,7 @@ void MenuSystem::select() {
     const MenuItem* item = &((*_currentMenu)[_currentIndex]);
 
     if (item->submenu) {
-        if (_depth < MAX_DEPTH) {
+        if (_depth < _MAX_DEPTH) {
             _menuStack[_depth] = _currentMenu;
             _indexStack[_depth] = _currentIndex;
             _depth++;
