@@ -28,7 +28,7 @@ size_t MenuList::size() const {
 MenuSystem::MenuSystem(DisplayManager* display, const MenuList* root)
     : _display(display), _currentMenu(root), _currentIndex(0), _depth(0) {}
 
-void MenuSystem::draw() {
+void MenuSystem::draw() const {
     if (!_currentMenu) return;
 
     if (_inViewMode && _activeView) {
@@ -51,7 +51,6 @@ void MenuSystem::navigate(int delta) {
 
     int maxIndex = _currentMenu->size();
     if (maxIndex == 0) return;
-    // while (_currentMenu[maxIndex].label != nullptr) maxIndex++;
 
     _currentIndex += delta;
     if (_currentIndex < 0) _currentIndex = maxIndex - 1;
@@ -75,6 +74,8 @@ void MenuSystem::select() {
             _currentMenu = item->submenu;
             _currentIndex = 0;
             draw();
+        } else {
+          Serial.println("MenuSystem: Maximum menu depth reached");
         }
     } else if (item->onSelect) {
         item->onSelect();

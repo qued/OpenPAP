@@ -53,7 +53,7 @@ public:
     void setActiveView(ActiveView* view);
     void exitActiveView();
 
-    void draw();  // Can be called manually to refresh
+    void draw() const;  // Can be called manually to refresh
 
 private:
     DisplayManager* _display;
