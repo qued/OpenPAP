@@ -5,7 +5,8 @@
 class PID {
 private:
     float Kp, Ki, Kd;
-    float *input, *output;
+    const float* input;
+    float* const output;
     float setpoint;
     float last_input;
     float out_min, out_max;
