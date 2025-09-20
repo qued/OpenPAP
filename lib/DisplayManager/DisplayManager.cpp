@@ -30,8 +30,8 @@ void DisplayManager::printLines(const String& line1, const String& line2, const 
     if (line3.length()) _display.println(line3);
     if (line4.length()) _display.println(line4);
     if (line5.length()) _display.println(line5);
-    if (line5.length()) _display.println(line6);
-    if (line5.length()) _display.println(line7);
+    if (line6.length()) _display.println(line6);
+    if (line7.length()) _display.println(line7);
     _display.display();
 }
 
