@@ -438,6 +438,6 @@ void PIDCalibrationView::draw() {
         "----------------",
         " ",
         "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
-        "Pressure: " + String(pressure_sensor.lastReading)
+        "Pressure: " + String(pressure_sensor.getLastReading())
     );
 }
