@@ -2,7 +2,7 @@
 
 // --- Submenus ---
 MenuList calibrationsMenu = MenuList({
-    MenuItem("Calibrate Motor", calibrateESC),
+    MenuItem("Cal. Speed Control", calibrateESC),
     MenuItem("Calibrate CPAP", calibratePID),
     MenuItem("Back", goBack)
 });
