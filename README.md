@@ -66,7 +66,7 @@ This is a WIP, although from my testing, the firmware is in a working state.
 - **Motor Wiring Order:** The three motor wires can be connected in **any order**. If the motor spins the wrong direction, simply **swap any two wires**.
 - **Motor Connector Tip:** The recommended ESC uses **female 3.5mm bullet connectors**, while the ResMed blower uses a **Molex Mini-Fit Jr.** connector. Instead of using an adapter, I cut off the Molex and soldered on **3 male bullet connectors** to match the ESC.
 - **ESC Receiver Wires:** For the recommended ESC, the 3 wires that attach to the ESP32 are color-coded instead of labeled. Black is ground, red is +5V DC, and white is the signal wire for PWM control.
-**Static Electricity Warning:** Exercise caution when handling electronic components. A static discharge from your skin can damage sensitive electronics. Avoid touching the circuitry or embedded components by holding components by the edges of their breakout boards.
+- **Static Electricity Warning:** Exercise caution when handling electronic components. A static discharge from your skin can damage sensitive electronics. Avoid touching the circuitry or embedded components by holding components by the edges of their breakout boards.
 
 ### Setup
 
