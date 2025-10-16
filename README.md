@@ -55,7 +55,7 @@ This is a WIP, although from my testing, the firmware is in a working state.
 
 1. Flash firmware onto ESP32. The structure of this project is best suited for PlatformIO, but you can move all files from subfolders of `lib/` and the `.ino` file from `src/` to a folder called `openpap/`, and Arduino IDE should recognize that as a valid project.
 
-2. It's recommended that you wire everything up on a breadboard to test the components. See above diagram for wiring. Unplug the USB cable from the ESP32, and wire up the rest of the components, but don't connect the ESC to the power supply. **The ESP32 should not be connected to USB while the how wire from the ESC is connected to Vin of the ESP32**.
+2. It's recommended that you wire everything up on a breadboard to test the components. See above diagram for wiring. Unplug the USB cable from the ESP32, and wire up the rest of the components, but don't connect the ESC to the power supply. **The ESP32 should not be connected to USB while the hot wire from the ESC is connected to Vin of the ESP32**.
 
 #### Wiring notes:
 - **ESP32 Board:** This guide uses a **30-pin ESP32 DevKit**. If you're using a different variant, you can keep the same GPIO numbers, but be sure to consult a pinout diagram to locate the correct physical pins on your board.
