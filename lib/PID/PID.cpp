@@ -29,7 +29,8 @@ void PID::compute(float dt) {
     errorSum += err * dt;
 
     float out = _Kp * err + _Ki * errorSum - _Kd * dInput;
-    out = constrain(out, _outMin, _outMax);
+    out = out < _outMax ? out : _outMax;
+    out = out > _outMin ? out : _outMin;
     *_output = out;
     _lastInput = in;
 }
