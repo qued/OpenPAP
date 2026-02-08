@@ -539,9 +539,9 @@ void SystemResponseCalibrationView::draw() {
             display.printLines(
                 "Sys Calibration",
                 "---------------",
-                " ",
                 "Attach hose and mask",
-                "to machine. Wear mask.",
+                "to machine.",
+                "Wear mask.",
                 " ",
                 "Press to continue..."
             );
