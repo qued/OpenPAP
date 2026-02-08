@@ -15,9 +15,16 @@ MenuList testComponentsMenu = MenuList({
     MenuItem("Back", goBack)
 });
 
+MenuList parametersMenu = MenuList({
+    MenuItem("Therapy Settings", notImplemented),
+    MenuItem("System Response", showSystemResponseParameters),
+    MenuItem("Back", goBack)
+});
+
 MenuList settingsMenu = MenuList({
     MenuItem("Calibrations", &calibrationsMenu),
     MenuItem("Test Components", &testComponentsMenu),
+    MenuItem("Parameters", &parametersMenu),
     MenuItem("Back", goBack)
 });
 
@@ -35,6 +42,7 @@ AllTestView allTestView;
 ESCCalibrationView escCalibrationView;
 PIDCalibrationView pidCalibrationView;
 SystemResponseCalibrationView systemResponseCalibrationView;
+ShowSystemResponseParametersView showSystemResponseParametersView;
 
 void notImplemented() {
     Serial.println("Not implemented");
@@ -78,6 +86,25 @@ void calibratePID() {
 void calibrateSystemResponse() {
     Serial.println("Entering system response calibration...");
     menu.setActiveView(&systemResponseCalibrationView);
+}
+
+void showSystemResponseParameters() {
+    Serial.println("Showing system response parameters...");
+    preferences.begin("OpenPAP", true);
+    int i = 0;
+    for (i = 0; i <= 10; i++) {
+        if (!preferences.isKey(("P_" + String(i*10)).c_str())) {
+            showSystemResponseParametersView.systemResponseParametersExist = false;
+            break;
+        } else {
+            showSystemResponseParametersView.systemResponseParametersExist = true;
+        }
+    }
+    for (i = 0; i <= 10; i++) {
+        showSystemResponseParametersView.P[i] = preferences.getFloat(("P_" + String(i*10)).c_str());
+    }
+    preferences.end();
+    menu.setActiveView(&showSystemResponseParametersView);
 }
 
 void showAbout() {
@@ -613,5 +640,38 @@ void SystemResponseCalibrationView::draw() {
                 "Press to exit..."
             );
             break;
+    }
+}
+
+ShowSystemResponseParametersView::ShowSystemResponseParametersView() {
+    systemResponseParametersExist = false;
+}
+
+void ShowSystemResponseParametersView::loop(int delta, bool buttonPressed) {
+    if (buttonPressed) {
+        menu.exitActiveView();
+    }
+}
+
+void ShowSystemResponseParametersView::draw() {
+    if (systemResponseParametersExist) {
+        display.printLines(
+            "P_0 " + String(showSystemResponseParametersView.P[0],1) + " P_60 " + String(showSystemResponseParametersView.P[6],1),
+            "P_10 " + String(showSystemResponseParametersView.P[1],1) + " P_70 " + String(showSystemResponseParametersView.P[7],1),
+            "P_20 " + String(showSystemResponseParametersView.P[2],1) + " P_80 " + String(showSystemResponseParametersView.P[8],1),
+            "P_30 " + String(showSystemResponseParametersView.P[3],1) + " P_90 " + String(showSystemResponseParametersView.P[9],1),
+            "P_40 " + String(showSystemResponseParametersView.P[4],1) + " P_100 " + String(showSystemResponseParametersView.P[10],1),
+            "P_50 " + String(showSystemResponseParametersView.P[5],1),
+            "Press to exit..."
+        );
+    } else {
+        display.printLines(
+            "System response",
+            "parameters not set.",
+            "Calibrate system ",
+            "response first.",
+            " ",
+            "Press to exit..."
+        );
     }
 }

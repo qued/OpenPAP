@@ -24,6 +24,7 @@ void testAll();
 void calibrateESC();
 void calibratePID();
 void calibrateSystemResponse();
+void showSystemResponseParameters();
 void showAbout();
 void goBack();
 void notImplemented();
@@ -90,6 +91,15 @@ private:
     unsigned int _phaseStartTime;
     const unsigned int _settlingTime;
     const unsigned int _phaseTime;
+};
+
+class ShowSystemResponseParametersView : public ActiveView {
+public:
+    ShowSystemResponseParametersView();
+    void loop(int delta, bool buttonPressed) override;
+    void draw() override;
+    float P[11];
+    bool systemResponseParametersExist;
 };
 
 // Helper function
