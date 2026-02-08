@@ -11,6 +11,7 @@ MenuList calibrationsMenu = MenuList({
 MenuList testComponentsMenu = MenuList({
     MenuItem("Test Motor", testMotor),
     MenuItem("Test Press. Sensor", testPressure),
+    MenuItem("Test All", testAll),
     MenuItem("Back", goBack)
 });
 
@@ -30,6 +31,7 @@ MenuList mainMenu = MenuList({
 TherapyView therapyView;
 MotorTestView motorTestView;
 PressureTestView pressureTestView;
+AllTestView allTestView;
 ESCCalibrationView escCalibrationView;
 PIDCalibrationView pidCalibrationView;
 SystemResponseCalibrationView systemResponseCalibrationView;
@@ -51,6 +53,11 @@ void testMotor() {
 void testPressure() {
     Serial.println("Entering pressure test...");
     menu.setActiveView(&pressureTestView);
+}
+
+void testAll() {
+    Serial.println("Entering all test...");
+    menu.setActiveView(&allTestView);
 }
 
 void calibrateESC() {
@@ -212,6 +219,32 @@ void PressureTestView::draw() {
         "Pressure: " + String(pressure_sensor.getPressure()) + " cmH2O",
         "Tare Value: " + String(pressure_sensor.getZeroValue()),
         "Cal Factor: " + String((long)pressure_sensor.getCalibrationFactor()),
+        "Press to exit"
+    );
+}
+
+// --- All Component Test ---
+void AllTestView::loop(int delta, bool buttonPressed) {
+    if (delta != 0) {
+        float currThrottle = esc.getThrottle();
+        float newThrottle = roundf((currThrottle + delta * .05) * 100) / 100;
+
+        esc.setThrottle(newThrottle);
+    }
+
+    if (buttonPressed) {
+        Serial.println("Leaving All Component Test...");
+        menu.exitActiveView();  // Return to menu
+    }
+}
+
+void AllTestView::draw() {
+    display.printLines(
+        "All Comp. Test",
+        "--------------",
+        "Throttle: " + String(round(100*esc.getThrottle())) + "%",
+        "Pressure: " + String(pressure_sensor.getPressure()) + " cmH2O",
+        " ",
         "Press to exit"
     );
 }

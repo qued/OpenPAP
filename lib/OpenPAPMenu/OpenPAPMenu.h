@@ -20,6 +20,7 @@ extern Preferences preferences;
 void beginTherapy();
 void testMotor();
 void testPressure();
+void testAll();
 void calibrateESC();
 void calibratePID();
 void calibrateSystemResponse();
@@ -42,6 +43,12 @@ public:
 };
 
 class PressureTestView : public ActiveView {
+public:
+    void loop(int delta, bool buttonPressed) override;
+    void draw() override;
+};
+
+class AllTestView : public ActiveView {
 public:
     void loop(int delta, bool buttonPressed) override;
     void draw() override;
