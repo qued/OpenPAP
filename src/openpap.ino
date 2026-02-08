@@ -55,9 +55,6 @@ void setup() {
     escCalibrationView.afterBoot();
     menu.setActiveView(&escCalibrationView);
   } else {
-    float Kp = preferences.getFloat("Kp", 1.0);
-    float Ki = preferences.getFloat("Ki", 0.0);
-    float Kd = preferences.getFloat("Kd", 0.0);
     preferences.end();
     Serial.begin(115200);
     esc.arm();
