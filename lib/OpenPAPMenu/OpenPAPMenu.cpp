@@ -4,6 +4,7 @@
 MenuList calibrationsMenu = MenuList({
     MenuItem("Cal. Speed Control", calibrateESC),
     MenuItem("Calibrate CPAP", calibratePID),
+    MenuItem("Calibrate Sys Resp", calibrateSystemResponse),
     MenuItem("Back", goBack)
 });
 
@@ -31,6 +32,8 @@ MotorTestView motorTestView;
 PressureTestView pressureTestView;
 ESCCalibrationView escCalibrationView;
 PIDCalibrationView pidCalibrationView;
+SystemResponseCalibrationView systemResponseCalibrationView;
+
 void notImplemented() {
     Serial.println("Not implemented");
 }
@@ -63,6 +66,11 @@ void calibrateESC() {
 void calibratePID() {
     Serial.println("Entering PID calibration...");
     menu.setActiveView(&pidCalibrationView);
+}
+
+void calibrateSystemResponse() {
+    Serial.println("Entering system response calibration...");
+    menu.setActiveView(&systemResponseCalibrationView);
 }
 
 void showAbout() {
@@ -250,11 +258,11 @@ void ESCCalibrationView::draw() {
     switch (_state) {
         case State::INIT:
             display.printLines(
-              "Motor Calibration",
-              "-----------------",
-              "Power off and on now,",
-              "or press button to ",
-              "cancel..."
+                "Motor Calibration",
+                "-----------------",
+                "Power off and on now,",
+                "or press button to ",
+                "cancel..."
             );
             break;
 
@@ -440,4 +448,137 @@ void PIDCalibrationView::draw() {
         "Throttle: " + String((int)(100*esc.getThrottle())) + "%",
         "Pressure: " + String(pressure_sensor.getLastReading())
     );
+}
+
+SystemResponseCalibrationView::SystemResponseCalibrationView()
+    : _state(State::INIT), _throttle(0), _phaseStartTime(0), _settlingTime(1000), _phaseTime(3000) {}
+
+void SystemResponseCalibrationView::loop(int delta, bool buttonPressed) {
+    static bool throttleNeedsUpdating = false;
+    static std::vector<float> staticPressureReadings;
+
+    switch (_state) {
+        case State::INIT:
+            _throttle = 0;
+            throttleNeedsUpdating = true;
+            if (buttonPressed) {
+                _state = State::BEFORE_PHASE;
+            }
+            break;
+        case State::BEFORE_PHASE:
+            esc.stop();
+            if (throttleNeedsUpdating) {
+                _throttle += 10;
+                throttleNeedsUpdating = false;
+            }
+            if (buttonPressed) {
+                _state = State::SETTLING_PHASE;
+                esc.setThrottle((float)_throttle / 100.0f);
+                _phaseStartTime = millis();
+            }
+            break;
+        case State::SETTLING_PHASE:
+            // Allow system to reach steady state
+            if (millis() - _phaseStartTime >= _settlingTime) {
+                _state = State::RECORDING_PHASE;
+                _phaseStartTime = millis();
+                staticPressureReadings.clear();
+            }
+            break;
+        case State::RECORDING_PHASE:
+            // Take and store measurements
+            staticPressureReadings.push_back(pressure_sensor.getPressure());
+            if (millis() - _phaseStartTime > _phaseTime) {
+                // Calculate system responses for throttle level
+                throttleNeedsUpdating = true;
+                float staticPressureResponse = calculateMedian(staticPressureReadings);
+
+                // Store the calculated responses
+                preferences.begin("OpenPAP", false);
+                preferences.putFloat(("P_" + String(_throttle)).c_str(), staticPressureResponse);
+                preferences.end();
+
+                if (_throttle < 100) {
+                    _state = State::BEFORE_PHASE;
+                } else {
+                    _state = State::FINAL;
+                    esc.stop();
+                }
+            }
+            break;
+        case State::FINAL:
+            _state = State::DONE;
+            break;
+        case State::DONE:
+            if (buttonPressed) {
+                _state = State::INIT;
+                menu.exitActiveView();
+            }
+            break;
+    }
+}
+
+float calculateMedian(std::vector<float>& readings) {
+    if (readings.empty()) return 0.0;
+    
+    std::sort(readings.begin(), readings.end());
+    size_t mid = readings.size() / 2;
+    
+    if (readings.size() % 2 == 0) {
+        // Even number of readings, average the two middle values
+        return (readings[mid-1] + readings[mid]) / 2.0;
+    } else {
+        // Odd number of readings, return the middle value
+        return readings[mid];
+    }
+}
+
+void SystemResponseCalibrationView::draw() {
+    switch (_state) {
+        case State::INIT:
+            display.printLines(
+                "Sys Calibration",
+                "---------------",
+                " ",
+                "Attach hose and mask",
+                "to machine. Wear mask.",
+                " ",
+                "Press to continue..."
+            );
+            break;
+        case State::BEFORE_PHASE:
+            display.printLines(
+                "Sys Calibration",
+                "---------------",
+                " ",
+                "Throttle " + String(_throttle) + "%",
+                "Take deep breath,",
+                "then hold breath and",
+                "press to continue..."
+            );
+            break;
+        case State::SETTLING_PHASE:
+        case State::RECORDING_PHASE:
+            display.printLines(
+                "Sys Calibration",
+                "---------------",
+                " ",
+                "Throttle " + String(_throttle) + "%",
+                "Hold breath for",
+                String((_phaseTime + _phaseStartTime - millis()) / 1000.0, 1) + " seconds"
+            );
+            break;
+        case State::FINAL:
+            break;
+        case State::DONE:
+            display.printLines(
+                "Sys Calibration",
+                "---------------",
+                " ",
+                "All done!",
+                " ",
+                "Press to exit..."
+            );
+            break;
+    }
 }

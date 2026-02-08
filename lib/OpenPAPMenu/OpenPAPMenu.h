@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include <vector>
+#include <algorithm>
 
 #include "MenuSystem.h"
 #include "ESC.h"
@@ -20,6 +22,7 @@ void testMotor();
 void testPressure();
 void calibrateESC();
 void calibratePID();
+void calibrateSystemResponse();
 void showAbout();
 void goBack();
 void notImplemented();
@@ -60,6 +63,30 @@ public:
     void loop(int delta, bool buttonPressed) override;
     void draw() override;
 };
+
+class SystemResponseCalibrationView : public ActiveView {
+public:
+    SystemResponseCalibrationView();
+    void loop(int delta, bool buttonPressed) override;
+    void draw() override;
+private:
+    enum class State {
+        INIT,
+        BEFORE_PHASE,
+        SETTLING_PHASE,
+        RECORDING_PHASE,
+        FINAL,
+        DONE
+    };
+    State _state;
+    unsigned int _throttle;
+    unsigned int _phaseStartTime;
+    const unsigned int _settlingTime;
+    const unsigned int _phaseTime;
+};
+
+// Helper function
+float calculateMedian(std::vector<float>& readings);
 
 extern ESCCalibrationView escCalibrationView;
 extern MenuList mainMenu;
