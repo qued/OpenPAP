@@ -460,13 +460,13 @@ void SystemResponseCalibrationView::loop(int delta, bool buttonPressed) {
     switch (_state) {
         case State::INIT:
             _throttle = 0;
-            throttleNeedsUpdating = true;
+            throttleNeedsUpdating = false;
             if (buttonPressed) {
                 _state = State::BEFORE_PHASE;
             }
+            esc.stop();
             break;
         case State::BEFORE_PHASE:
-            esc.stop();
             if (throttleNeedsUpdating) {
                 _throttle += 10;
                 throttleNeedsUpdating = false;
