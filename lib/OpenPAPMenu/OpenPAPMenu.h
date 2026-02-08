@@ -23,6 +23,7 @@ void calibratePID();
 void showAbout();
 void goBack();
 void notImplemented();
+
 class TherapyView : public ActiveView {
 public:
     void loop(int delta, bool buttonPressed) override;
@@ -30,16 +31,19 @@ public:
 private:
     MeasurementBuffer<256> _pressureBuffer;
 };
+
 class MotorTestView : public ActiveView {
 public:
     void loop(int delta, bool buttonPressed) override;
     void draw() override;
 };
+
 class PressureTestView : public ActiveView {
 public:
     void loop(int delta, bool buttonPressed) override;
     void draw() override;
 };
+
 class ESCCalibrationView : public ActiveView {
 public:
     ESCCalibrationView();
@@ -47,8 +51,10 @@ public:
     void draw() override;
     void afterBoot();
 private:
-    enum {INIT, MAXTHROTTLE, MINTHROTTLE, DONE} _state;
+    enum class State {INIT, MAXTHROTTLE, MINTHROTTLE, DONE};
+    State _state;
 };
+
 class PIDCalibrationView : public ActiveView {
 public:
     void loop(int delta, bool buttonPressed) override;

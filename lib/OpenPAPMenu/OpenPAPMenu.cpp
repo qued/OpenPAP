@@ -210,15 +210,15 @@ void PressureTestView::draw() {
 
 // --- ESC Calibration ---
 
-ESCCalibrationView::ESCCalibrationView(){ _state = INIT; }
+ESCCalibrationView::ESCCalibrationView(){ _state = State::INIT; }
 
 void ESCCalibrationView::afterBoot() {
-    _state = MAXTHROTTLE;
+    _state = State::MAXTHROTTLE;
 }
 
 void ESCCalibrationView::loop(int delta, bool buttonPressed) {
     switch (_state) {
-        case INIT:
+        case State::INIT:
             if (buttonPressed) { // User cancels calibration
                 preferences.begin("OpenPAP", false);
                 preferences.remove("esc_cal");
@@ -227,20 +227,20 @@ void ESCCalibrationView::loop(int delta, bool buttonPressed) {
             }
             break;
 
-        case MAXTHROTTLE:
+        case State::MAXTHROTTLE:
             if (buttonPressed) {
                 esc.stop();
-                _state = MINTHROTTLE; // Go to next screen
+                _state = State::MINTHROTTLE; // Go to next screen
             }
             break;
 
-        case MINTHROTTLE:
+        case State::MINTHROTTLE:
             if (buttonPressed) {
-                _state = DONE; // Go to next screen
+                _state = State::DONE; // Go to next screen
             }
             break;
 
-        case DONE:
+        case State::DONE:
             // User is stuck here, because they should reboot
             break;
     }
@@ -248,7 +248,7 @@ void ESCCalibrationView::loop(int delta, bool buttonPressed) {
 
 void ESCCalibrationView::draw() {
     switch (_state) {
-        case INIT:
+        case State::INIT:
             display.printLines(
               "Motor Calibration",
               "-----------------",
@@ -258,7 +258,7 @@ void ESCCalibrationView::draw() {
             );
             break;
 
-        case MAXTHROTTLE:
+        case State::MAXTHROTTLE:
             display.printLines(
                 "Motor Calibration",
                 "-----------------",
@@ -270,7 +270,7 @@ void ESCCalibrationView::draw() {
             );
             break;
 
-        case MINTHROTTLE:
+        case State::MINTHROTTLE:
             display.printLines(
                 "Motor Calibration",
                 "-----------------",
@@ -282,7 +282,7 @@ void ESCCalibrationView::draw() {
             );
             break;
 
-        case DONE:
+        case State::DONE:
             display.printLines(
                 "Motor Calibration",
                 "-----------------",
