@@ -97,7 +97,7 @@ void test_pid_converges_to_desired_value() {
 
     float pressure_tail[100];
     float throttle_tail[100];
-    std::ofstream file("output.csv");
+    std::ofstream file("test/output/pid_response_test.csv");
 
     // Write header
     file << "time,input,output\n";
