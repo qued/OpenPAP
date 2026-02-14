@@ -28,10 +28,10 @@ void PID::compute(float dt) {
     // }
     errorSum += err * dt;
 
-    float out = _Kp * err + _Ki * errorSum - _Kd * dInput;
-    out = out < _outMax ? out : _outMax;
-    out = out > _outMin ? out : _outMin;
-    *_output = out;
+    float change_out = _Kp * err + _Ki * errorSum - _Kd * dInput;
+    *_output += change_out;
+    *_output = *_output < _outMax ? *_output : _outMax;
+    *_output = *_output > _outMin ? *_output : _outMin;
     _lastInput = in;
 }
 
