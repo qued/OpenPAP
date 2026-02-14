@@ -42,3 +42,6 @@ notes/
 build123d/
 stl/
 calibrate_hx711/
+.aider*
+.env
+test/output/
