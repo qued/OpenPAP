@@ -17,6 +17,7 @@ MenuList testComponentsMenu = MenuList({
 
 MenuList parametersMenu = MenuList({
     MenuItem("Therapy Settings", notImplemented),
+    MenuItem("PID Parameters", showPidParameters),
     MenuItem("System Response", showSystemResponseParameters),
     MenuItem("Back", goBack)
 });
@@ -42,6 +43,7 @@ AllTestView allTestView;
 ESCCalibrationView escCalibrationView;
 PIDCalibrationView pidCalibrationView;
 SystemResponseCalibrationView systemResponseCalibrationView;
+ShowPidParametersView showPidParametersView;
 ShowSystemResponseParametersView showSystemResponseParametersView;
 
 void notImplemented() {
@@ -86,6 +88,27 @@ void calibratePID() {
 void calibrateSystemResponse() {
     Serial.println("Entering system response calibration...");
     menu.setActiveView(&systemResponseCalibrationView);
+}
+
+void showPidParameters() {
+    preferences.begin("OpenPAP", true);
+    if (
+        preferences.isKey("Kp") &&
+        preferences.isKey("Ki") &&
+        preferences.isKey("Kd") &&
+        preferences.isKey("tau") &&
+        preferences.isKey("theta")
+    ) {
+        showPidParametersView.pidParametersExist = true;
+        showPidParametersView.Kp = preferences.getFloat("Kp");
+        showPidParametersView.Ki = preferences.getFloat("Ki");
+        showPidParametersView.Kd = preferences.getFloat("Kd");
+        showPidParametersView.Tau = preferences.getFloat("tau");
+        showPidParametersView.Theta = preferences.getFloat("theta");
+    } else {
+        showPidParametersView.pidParametersExist = false;
+    }
+    menu.setActiveView(&showPidParametersView);
 }
 
 void showSystemResponseParameters() {
@@ -640,6 +663,38 @@ void SystemResponseCalibrationView::draw() {
                 "Press to exit..."
             );
             break;
+    }
+}
+
+ShowPidParametersView::ShowPidParametersView() {
+    pidParametersExist = false;
+}
+
+void ShowPidParametersView::loop(int delta, bool buttonPressed) {
+    if (buttonPressed) {
+        menu.exitActiveView();
+    }
+}
+
+void ShowPidParametersView::draw() {
+    if (pidParametersExist) {
+        display.printLines(
+            "Kp " + String(showPidParametersView.Kp,5),
+            "Ki " + String(showPidParametersView.Ki,5),
+            "Kd " + String(showPidParametersView.Kd,5),
+            "Tau " + String(showPidParametersView.Tau,5),
+            "Theta " + String(showPidParametersView.Theta,5),
+            " ",
+            "Press to exit..."
+        );
+    } else {
+        display.printLines(
+            "PID parameters not set.",
+            "Calibrate pid ",
+            "first.",
+            " ",
+            "Press to exit..."
+        );
     }
 }
 

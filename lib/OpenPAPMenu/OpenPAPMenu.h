@@ -24,6 +24,7 @@ void testAll();
 void calibrateESC();
 void calibratePID();
 void calibrateSystemResponse();
+void showPidParameters();
 void showSystemResponseParameters();
 void showAbout();
 void goBack();
@@ -91,6 +92,19 @@ private:
     unsigned int _phaseStartTime;
     const unsigned int _settlingTime;
     const unsigned int _phaseTime;
+};
+
+class ShowPidParametersView : public ActiveView {
+public:
+    ShowPidParametersView();
+    void loop(int delta, bool buttonPressed) override;
+    void draw() override;
+    bool pidParametersExist;
+    float Kp;
+    float Ki;
+    float Kd;
+    float Tau;
+    float Theta;
 };
 
 class ShowSystemResponseParametersView : public ActiveView {
