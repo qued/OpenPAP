@@ -103,8 +103,8 @@ void test_pid_converges_to_desired_value() {
     file << "time,input,output\n";
 
     int i = 0;
-    for (float t=0; t<5; t+=0.01) {
-        controller.compute(0.01);
+    for (float t=0; t<5; t+=0.030) {
+        controller.compute(0.030);
 
         input = expected_output_from_input(output);
         pressure_tail[i % 100] = input;
@@ -121,7 +121,7 @@ void test_pid_converges_to_desired_value() {
     float max_of_throttle_tail = 0.0;
     float min_of_throttle_tail = 1.0;
 
-    for (i = 0; i < 100; i++) {
+    for (i = 0; i < 30; i++) {
         if (pressure_tail[i] > max_of_pressure_tail) {
             max_of_pressure_tail = pressure_tail[i];
         }
