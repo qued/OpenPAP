@@ -88,9 +88,9 @@ void test_pid_converges_to_desired_value() {
         &input,
         &output,
         /* targetPressure */ 10.0f,
-        /* Kp */ 0.002f,
-        /* Ki */ 0.00000f,
-        /* Kd */ 0.0000000f,
+        /* Kp */ 0.0030f,
+        /* Ki */ 0.0010f,
+        /* Kd */ 0.0005f,
         0.0f,
         1.0f
     );
@@ -120,7 +120,7 @@ void test_pid_converges_to_desired_value() {
     float min_of_pressure_tail = P[10];
     float max_of_throttle_tail = 0.0;
     float min_of_throttle_tail = 1.0;
-
+    
     for (i = 0; i < 30; i++) {
         if (pressure_tail[i] > max_of_pressure_tail) {
             max_of_pressure_tail = pressure_tail[i];
