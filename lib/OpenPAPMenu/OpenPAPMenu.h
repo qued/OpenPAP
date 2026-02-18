@@ -103,6 +103,7 @@ public:
     float Kp;
     float Ki;
     float Kd;
+    float K;
     float Tau;
     float Theta;
 };

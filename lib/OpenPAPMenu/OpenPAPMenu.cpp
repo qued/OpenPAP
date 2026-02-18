@@ -96,6 +96,7 @@ void showPidParameters() {
         preferences.isKey("Kp") &&
         preferences.isKey("Ki") &&
         preferences.isKey("Kd") &&
+        preferences.isKey("K") &&
         preferences.isKey("tau") &&
         preferences.isKey("theta")
     ) {
@@ -103,6 +104,7 @@ void showPidParameters() {
         showPidParametersView.Kp = preferences.getFloat("Kp");
         showPidParametersView.Ki = preferences.getFloat("Ki");
         showPidParametersView.Kd = preferences.getFloat("Kd");
+        showPidParametersView.K = preferences.getFloat("K");
         showPidParametersView.Tau = preferences.getFloat("tau");
         showPidParametersView.Theta = preferences.getFloat("theta");
     } else {
@@ -682,9 +684,9 @@ void ShowPidParametersView::draw() {
             "Kp " + String(showPidParametersView.Kp,5),
             "Ki " + String(showPidParametersView.Ki,5),
             "Kd " + String(showPidParametersView.Kd,5),
+            "K " + String(showPidParametersView.K,5),
             "Tau " + String(showPidParametersView.Tau,5),
             "Theta " + String(showPidParametersView.Theta,5),
-            " ",
             "Press to exit..."
         );
     } else {
