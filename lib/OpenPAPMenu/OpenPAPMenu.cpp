@@ -443,7 +443,7 @@ void PIDCalibrationView::loop(int delta, bool buttonPressed) {
             }
 
             // --- Step 2: Calculate Process Gain K ---
-            float deltaInput = 0.5f; // Motor throttle step
+            float deltaInput = 1.0f; // Motor throttle step
             float K = deltaP / deltaInput;
 
             // --- Step 3: Find Dead Time (θ) ---
@@ -494,7 +494,7 @@ void PIDCalibrationView::loop(int delta, bool buttonPressed) {
             const float lambda = theta;
 
             float Kp = tau / (K * (lambda + theta));
-            float Ki = Kp / tau;
+            float Ki = Kp / (tau + theta);
             float Kd = Kp * theta / 2;
 
             // --- Step 6: Store Results ---
@@ -510,6 +510,15 @@ void PIDCalibrationView::loop(int delta, bool buttonPressed) {
             Serial.println("Calibration complete:");
             Serial.printf("Kp = %.3f, Ki = %.3f, Kd = %.3f\n", Kp, Ki, Kd);
             Serial.printf("K = %.3f, τ = %.3f, θ = %.3f\n", K, tau, theta);
+            Serial.println("DATA: t,P");
+            // Output pressure log
+            int i = 0;
+            for (i=0; i < sampleCount; i++) {
+                Serial.print("DATA: ");
+                Serial.print(timeLog[i]);
+                Serial.print(",");
+                Serial.println(pressureLog[i]);
+            }
 
             state = DONE;
             break;
