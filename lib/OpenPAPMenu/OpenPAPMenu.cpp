@@ -285,6 +285,7 @@ void AllTestView::loop(int delta, bool buttonPressed) {
     }
 
     if (buttonPressed) {
+        esc.setThrottle(0.0f);
         Serial.println("Leaving All Component Test...");
         menu.exitActiveView();  // Return to menu
     }
